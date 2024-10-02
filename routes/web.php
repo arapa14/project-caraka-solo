@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SwitchAccountController;
 use Illuminate\Foundation\Application;
@@ -27,6 +28,9 @@ Route::middleware(['auth', 'isAdmin'])->group(function () {
 
 Route::middleware(['auth', 'isReviewer'])->group(function() {
         //Url yang hanya bisa diakses Reviewer
+    Route::get('homepage', [LaporanController::class, 'index']);
+
+
     Route::get('/test1', function() {
         return "Haii Reviewer";
     });
