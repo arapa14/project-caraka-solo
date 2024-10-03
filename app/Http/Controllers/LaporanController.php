@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\LaporanCollection;
 use App\Models\Laporan;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -13,7 +14,7 @@ class LaporanController extends Controller
      */
     public function index()
     {
-        $laporan = Laporan::all();
+        $laporan = new LaporanCollection(Laporan::paginate(8));
         return Inertia::render('Homepage', [
             'title' => 'Reviewer',
             'laporan' => $laporan,

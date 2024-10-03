@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Models\Laporan;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
-use Faker\Factory as Faker;
+
 
 
 class laporanSeeder extends Seeder
@@ -15,16 +15,6 @@ class laporanSeeder extends Seeder
      */
     public function run(): void
     {
-        $faker = Faker::create(); // Initialize Faker instance
-
-        for ($i=1; $i<12; $i++) {
-
-            DB::table('laporans')->insert([
-                'name' => $faker->name(),
-                'description' => implode("\n", $faker->paragraphs(1)), // Convert array to string
-                'location' => $faker->sentence(),
-                'jumlah' => $faker->numberBetween(1, 3),
-            ]);
-        }
+        Laporan::factory()->count(50)->create();
     }
 }

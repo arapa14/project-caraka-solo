@@ -45,7 +45,7 @@ Route::middleware(['auth', 'isCaraka'])->group(function() {
 
 
 //Switch Account
-Route::get('/switch-account/{id}', [SwitchAccountController::class, 'switchAccount'])->name('switch-account');
+Route::get('/switch/{id}', [SwitchAccountController::class, 'switchAccount'])->name('switch-account');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
