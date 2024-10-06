@@ -16,7 +16,7 @@ class LaporanController extends Controller
      */
     public function index()
     {
-        $laporan = Laporan::orderByDesc('id')->paginate(5); // Langsung menggunakan paginate
+        $laporan = Laporan::orderByDesc('id')->paginate(6); // Langsung menggunakan paginate
         // dd($laporan);
         return Inertia::render('Homepage', [
             'title' => 'Reviewer',
