@@ -41,6 +41,8 @@ Route::middleware(['auth', 'isCaraka'])->group(function() {
     Route::get('/test', function() {
         return "Haii Caraka";
     });
+    Route::post('/laporan', [LaporanController::class, 'store']);
+    Route::get('/laporan', [LaporanController::class, 'show']);
 });
 
 
