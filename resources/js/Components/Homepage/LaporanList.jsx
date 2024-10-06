@@ -4,8 +4,8 @@ const isLaporan = (laporan) => {
             <div key={i} className="card w-full lg:w-96 bg-base-100 shadow-xl">
                 <figure>
                     <img
-                        src="https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp"
-                        alt="Shoes" />
+                        src={`/storage/uploads/${data.image}`} // Mengambil gambar dari storage
+                        alt={data.description} />
                 </figure>
                 <div className="card-body">
                     <h2 className="card-title">

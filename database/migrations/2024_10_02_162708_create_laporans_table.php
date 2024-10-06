@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('description');
             $table->string('location');
             $table->integer('jumlah');
+            $table->string('image', );
             $table->timestamps();
         });
     }

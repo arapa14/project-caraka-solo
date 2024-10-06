@@ -7,6 +7,7 @@ export default function Dashboard(props) {
     const [description, setDescription] = useState('');
     const [location, setLocation] = useState('');
     const [jumlah, setJumlah] = useState(1);
+    const [image, setImage] = useState('');
     const [isNotif, setIsNotif] = useState(false);
     console.log(props);
 
@@ -15,14 +16,19 @@ export default function Dashboard(props) {
             user_id: props.auth.user.id,
             description,
             location,
-            jumlah
+            jumlah,
+            image,
         };
 
         router.post('/laporan', data, {
+            headers: {
+                'Content-Type': 'multipart/form-data', // Set the appropriate header
+            },
             onSuccess: () => {
                 setDescription('');
                 setLocation('');
                 setIsNotif(true);
+                setImage('');
                 router.get('/laporan');
             },
             onError: () => {
@@ -78,6 +84,7 @@ export default function Dashboard(props) {
                         <input
                             type="file"
                             className="file-input w-full mb-4"
+                            onChange={(e) => setImage(e.target.files[0])} //Ambil gambar
                         />
                         <input
                             type="text"
@@ -101,7 +108,7 @@ export default function Dashboard(props) {
                                 <div key={i} className="card bg-base-100 shadow-xl">
                                     <figure>
                                         <img
-                                            src="https://img.daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.webp"
+                                            src={`/storage/uploads/${laporan.image}`} // Mengambil gambar dari storage
                                             alt={laporan.description}
                                             className="object-cover h-48 w-full"
                                         />
