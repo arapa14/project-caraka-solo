@@ -7,6 +7,7 @@ use App\Models\Laporan;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Imagick;
 use ImagickDraw;
@@ -59,6 +60,7 @@ class LaporanController extends Controller
         $laporan->description = $request->description;
         $laporan->location = $request->location;
         $laporan->jumlah = $request->jumlah; // Ambil jumlah dari request
+        // dd($laporan->jumlah);
 
         // Watermarking logic
         if ($request->hasFile('image')) {
@@ -111,6 +113,28 @@ class LaporanController extends Controller
         // Kembali ke halaman dashboard
         return redirect('/dashboard')->with('message', 'Laporan berhasil disimpan');
     }
+
+    public function deleteAllUploads()
+    {
+        try {
+            $files = Storage::files('public/uploads');
+            if (empty($files)) {
+                return response()->json(['message' => 'No uploads found to delete.'], 404);
+            }
+
+            foreach ($files as $file) {
+                if (!Storage::delete($file)) {
+                    throw new \Exception("Failed to delete file: {$file}");
+                }
+            }
+
+            return response()->json(['message' => 'All uploads deleted successfully.'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Failed to delete uploads: ' . $e->getMessage()], 500);
+        }
+    }
+
+
 
     /**
      * Display the specified resource.

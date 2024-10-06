@@ -6,133 +6,240 @@ import React, { useState, useEffect } from 'react';
 export default function Dashboard(props) {
     const [description, setDescription] = useState('');
     const [location, setLocation] = useState('');
-    const [jumlah, setJumlah] = useState(1);
     const [image, setImage] = useState('');
     const [isNotif, setIsNotif] = useState(false);
-    console.log(props);
+    const [showModal, setShowModal] = useState(false); // Modal visibility state
+    const [reportCount, setReportCount] = useState(1); // To track the count of reports
+    console.log('julah laporan', reportCount)
+
+    const ENABLE_TIME_RESTRICTION = false;
 
     const handleSubmit = () => {
+        const now = new Date();
+        const currentHour = now.getHours();
+        const currentDay = now.getDate();
+        const previousUpload = localStorage.getItem('lastUpload');
+    
+        // Define time windows
+        const morningWindow = currentHour >= 6 && currentHour < 12;
+        const afternoonWindow = currentHour >= 12 && currentHour < 15;
+        const eveningWindow = currentHour >= 15 && currentHour < 17;
+    
+        // If time restriction is enabled, check the allowed time windows
+        if (ENABLE_TIME_RESTRICTION) {
+            if (!(morningWindow || afternoonWindow || eveningWindow)) {
+                setShowModal(true); // Show modal instead of alert
+                return;
+            }
+    
+            // Prevent multiple uploads in the same time window
+            if (previousUpload && new Date(previousUpload).getDate() === currentDay) {
+                alert('Anda sudah mengupload laporan dalam waktu ini.');
+                return;
+            }
+        }
+    
+        // Proceed with submission
         const data = {
             user_id: props.auth.user.id,
             description,
             location,
-            jumlah,
+            jumlah: reportCount, // Use the current report count
             image,
         };
-
+    
         router.post('/laporan', data, {
             headers: {
-                'Content-Type': 'multipart/form-data', // Set the appropriate header
+                'Content-Type': 'multipart/form-data',
             },
             onSuccess: () => {
                 setDescription('');
                 setLocation('');
                 setIsNotif(true);
                 setImage('');
-                router.get('/laporan');
+                localStorage.setItem('lastUpload', now);
+    
+                // Update report count: increment, but reset to 1 if greater than 3
+                setReportCount(prevCount => (prevCount >= 3 ? 1 : prevCount + 1));
+    
+                // Keep notification visible for 10 seconds
+                setTimeout(() => {
+                    setIsNotif(false);
+                    router.get('/laporan');
+                }, 1000);
+    
             },
             onError: () => {
                 setIsNotif(false);
             }
         });
     };
+    
 
     useEffect(() => {
         if (!props.laporan) {
             router.get('/laporan');
         }
-        console.log('props caraka', props.data);
     }, [props.laporan]);
 
     return (
         <AuthenticatedLayout
-            header={
-                <h2 className="text-2xl font-bold text-gray-800">Caraka Dashboard</h2>
-            }
+            header={<h2 className="text-4xl font-bold text-blue-700">Caraka Dashboard</h2>}
         >
             <Head title="Dashboard" />
 
-            <div className="py-12">
+            <div className="py-12 bg-gray-100">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                    {/* Notification Section */}
+                    {/* Notification for success */}
                     {isNotif && (
-                        <div role="alert" className="alert alert-info mb-4">
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                className="h-6 w-6 inline-block mr-2 text-blue-600">
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth="2"
-                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                            <span>{props.flash.message}</span>
+                        <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-lg mb-8">
+                            <p>Laporan berhasil ditambahkan!</p>
                         </div>
                     )}
+
+                    {/* Time Restriction Modal */}
+                    {showModal && (
+                        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
+                            <div className="bg-white p-6 rounded-lg shadow-lg">
+                                <h3 className="text-lg font-bold text-red-600">Peringatan</h3>
+                                <p className="mt-2 text-gray-600">Laporan hanya bisa dikirim pada jam 06.00 - 12.00, 12.00 - 15.00, atau 15.00 - 17.00</p>
+                                <div className="mt-4">
+                                    <button
+                                        className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700"
+                                        onClick={() => setShowModal(false)}
+                                    >
+                                        Tutup
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Form Section */}
-                    <div className="bg-white shadow-md rounded-lg p-6 mb-6">
-                        <h3 className="text-lg font-semibold mb-4">Submit Laporan</h3>
+                    <div className="bg-white shadow-lg rounded-lg p-8 mb-10">
+                        <h3 className="text-2xl font-semibold text-gray-700 mb-6">Submit Laporan</h3>
+
                         <input
                             type="text"
                             placeholder="Deskripsi"
-                            className="input input-bordered w-full mb-4"
+                            className="input input-bordered w-full p-4 mb-4 text-lg rounded-lg bg-white border-gray-300 focus:border-blue-500 focus:outline-none text-black"
                             onChange={(e) => setDescription(e.target.value)}
                             value={description}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    setImage('');
+                                    document.querySelector('input[type="file"]').click();
+                                    e.preventDefault();
+                                }
+                            }}
                         />
-                        <input
-                            type="file"
-                            className="file-input w-full mb-4"
-                            onChange={(e) => setImage(e.target.files[0])} //Ambil gambar
-                        />
+
+                        <div className="mb-4">
+                            <label className="block mb-2 text-lg text-gray-700">Upload File:</label>
+                            <input
+                                type="file"
+                                className="w-full p-4 text-lg rounded-lg bg-white border border-gray-300 hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                                onChange={(e) => setImage(e.target.files[0])}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && image) {
+                                        handleSubmit();
+                                        e.preventDefault();
+                                    }
+                                }}
+                            />
+                        </div>
+
                         <input
                             type="text"
                             placeholder="Lokasi"
-                            className="input input-bordered w-full mb-4"
+                            className="input input-bordered w-full p-4 mb-4 text-lg rounded-lg bg-white border-gray-300 focus:border-blue-500 focus:outline-none text-black"
                             onChange={(e) => setLocation(e.target.value)}
                             value={location}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    handleSubmit();
+                                    e.preventDefault();
+                                }
+                            }}
                         />
+
                         <button
-                            className="btn btn-primary w-full"
+                            className="w-full bg-blue-600 text-white py-3 rounded-lg text-lg font-medium hover:bg-blue-700 transition"
                             onClick={handleSubmit}
                         >
                             Submit
                         </button>
                     </div>
 
-                    {/* Laporan List Section */}
+                    {/* No Reports Notification */}
+                    {(!props.laporan || props.laporan.data.length === 0) && (
+                        <div className="text-center py-12 bg-white shadow-lg rounded-lg mb-10">
+                            <div className="text-3xl font-semibold text-gray-500 mb-4">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-12 w-12 text-blue-400 inline-block mr-2"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M9 12h6m-6 4h6m-6-8h6m2 0a2 2 0 00-2-2H9a2 2 0 00-2 2v10a2 2 0 002 2h6a2 2 0 002-2V8z"
+                                    />
+                                </svg>
+                                Belum Ada Laporan
+                            </div>
+                            <p className="text-gray-400 mb-6 text-xl">Ayo buat laporan pertama Anda!</p>
+                        </div>
+                    )}
+
+                    {/* List report */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {props.laporan && props.laporan.data.length > 0 ? (
+                        {props.laporan && props.laporan.data.length > 0 &&
                             props.laporan.data.map((laporan, i) => (
-                                <div key={i} className="card bg-base-100 shadow-xl">
-                                    <figure>
+                                <div key={i} className="card w-full lg:w-96 bg-white shadow-md rounded-lg overflow-hidden mb-6">
+                                    {/* Gambar dengan tampilan yang responsif dan memenuhi container */}
+                                    <figure className="h-64 w-full"> {/* Mengatur tinggi figure secara konsisten */}
                                         <img
-                                            src={`/storage/uploads/${laporan.image}`} // Mengambil gambar dari storage
+                                            src={`/storage/uploads/${laporan.image}`}
                                             alt={laporan.description}
-                                            className="object-cover h-48 w-full"
+                                            className="w-full h-full object-cover object-center" // object-cover untuk mengisi container secara proporsional
                                         />
                                     </figure>
-                                    <div className="card-body">
-                                        <h2 className="card-title flex justify-between items-center">
+                                    <div className="p-6">
+                                        {/* Title dengan badge */}
+                                        <h2 className="text-2xl font-bold text-blue-600 mb-2">
                                             {laporan.name}
-                                            <div className="badge badge-secondary">{laporan.jumlah}</div>
+                                            <div className="inline-block ml-2 bg-blue-100 text-blue-700 text-xs font-semibold px-2 py-1 rounded">
+                                                Laporan : {laporan.jumlah}
+                                            </div>
                                         </h2>
-                                        <p>{laporan.description}</p>
-                                        <div className="card-actions justify-end">
-                                            <div className="badge badge-inline">{laporan.location}</div>
-                                            <div className="badge badge-outline">Unapproved</div>
+                                        {/* Deskripsi */}
+                                        <p className="text-gray-700 mb-4">
+                                            {laporan.description}
+                                        </p>
+                                        {/* Lokasi dan status */}
+                                        <div className="flex justify-between items-center">
+                                            <div className="text-sm text-gray-500">
+                                                {laporan.location}
+                                            </div>
+                                            <div className="text-sm text-red-500">
+                                                UnApproved
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             ))
-                        ) : (
-                            <p className="text-gray-500">Belum Membuat Laporan</p>
-                        )}
+                        }
                     </div>
 
-                    {/* Paginator */}
+
+
+                    {/* Pagination */}
                     <Paginator meta={props.laporan} />
+
                 </div>
             </div>
         </AuthenticatedLayout>
