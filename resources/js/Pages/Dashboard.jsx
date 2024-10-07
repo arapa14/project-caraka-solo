@@ -9,36 +9,42 @@ export default function Dashboard(props) {
     const [image, setImage] = useState('');
     const [isNotif, setIsNotif] = useState(false);
     const [showModal, setShowModal] = useState(false); // Modal visibility state
+    const [alreadyModal, setAleadyModal] = useState(false);
     const [reportCount, setReportCount] = useState(1); // To track the count of reports
     console.log('julah laporan', reportCount)
 
+    // Camera state
+    const [isCameraOpen, setIsCameraOpen] = useState(false); // Control camera state
+    const [videoStream, setVideoStream] = useState(null); // Video stream from the camera
+
     const ENABLE_TIME_RESTRICTION = false;
+    
 
     const handleSubmit = () => {
         const now = new Date();
         const currentHour = now.getHours();
         const currentDay = now.getDate();
         const previousUpload = localStorage.getItem('lastUpload');
-    
+
         // Define time windows
         const morningWindow = currentHour >= 6 && currentHour < 12;
         const afternoonWindow = currentHour >= 12 && currentHour < 15;
         const eveningWindow = currentHour >= 15 && currentHour < 17;
-    
+
         // If time restriction is enabled, check the allowed time windows
         if (ENABLE_TIME_RESTRICTION) {
             if (!(morningWindow || afternoonWindow || eveningWindow)) {
                 setShowModal(true); // Show modal instead of alert
                 return;
             }
-    
+
             // Prevent multiple uploads in the same time window
             if (previousUpload && new Date(previousUpload).getDate() === currentDay) {
-                alert('Anda sudah mengupload laporan dalam waktu ini.');
+                setAleadyModal(true); // Show modal instead of alert
                 return;
             }
         }
-    
+
         // Proceed with submission
         const data = {
             user_id: props.auth.user.id,
@@ -47,7 +53,7 @@ export default function Dashboard(props) {
             jumlah: reportCount, // Use the current report count
             image,
         };
-    
+
         router.post('/laporan', data, {
             headers: {
                 'Content-Type': 'multipart/form-data',
@@ -58,23 +64,60 @@ export default function Dashboard(props) {
                 setIsNotif(true);
                 setImage('');
                 localStorage.setItem('lastUpload', now);
-    
+
                 // Update report count: increment, but reset to 1 if greater than 3
                 setReportCount(prevCount => (prevCount >= 3 ? 1 : prevCount + 1));
-    
+
                 // Keep notification visible for 10 seconds
                 setTimeout(() => {
                     setIsNotif(false);
                     router.get('/laporan');
-                }, 1000);
-    
+                }, 3000);
+
             },
             onError: () => {
                 setIsNotif(false);
             }
         });
     };
-    
+
+    // Function to open the camera
+    const openCamera = () => {
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then((stream) => {
+                    // Handle the stream
+                })
+                .catch((error) => {
+                    console.error("Error accessing camera: ", error);
+                });
+        } else {
+            alert("getUserMedia is not supported by your browser.");
+        }
+    };
+
+    // Function to capture image from the camera
+    const captureImage = () => {
+        const videoElement = document.getElementById('camera-preview');
+        const canvas = document.createElement('canvas');
+        canvas.width = videoElement.videoWidth;
+        canvas.height = videoElement.videoHeight;
+        const context = canvas.getContext('2d');
+        context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+        const imageData = canvas.toDataURL('image/png');
+        setImage(imageData);
+        closeCamera();
+    };
+
+    // Function to close the camera
+    const closeCamera = () => {
+        if (videoStream) {
+            const tracks = videoStream.getTracks();
+            tracks.forEach(track => track.stop());
+        }
+        setIsCameraOpen(false);
+    };
+
 
     useEffect(() => {
         if (!props.laporan) {
@@ -115,6 +158,24 @@ export default function Dashboard(props) {
                         </div>
                     )}
 
+                    {/* Already Uploaded Modal */}
+                    {alreadyModal && (
+                        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
+                            <div className="bg-white p-6 rounded-lg shadow-lg">
+                                <h3 className="text-lg font-bold text-red-600">Peringatan</h3>
+                                <p className="mt-2 text-gray-600">Anda sudah mengupload laporan dalam waktu ini.</p>
+                                <div className="mt-4">
+                                    <button
+                                        className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700"
+                                        onClick={() => setAleadyModal(false)}
+                                    >
+                                        Tutup
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Form Section */}
                     <div className="bg-white shadow-lg rounded-lg p-8 mb-10">
                         <h3 className="text-2xl font-semibold text-gray-700 mb-6">Submit Laporan</h3>
@@ -135,20 +196,29 @@ export default function Dashboard(props) {
                         />
 
                         <div className="mb-4">
-                            <label className="block mb-2 text-lg text-gray-700">Upload File:</label>
-                            <input
-                                type="file"
-                                className="w-full p-4 text-lg rounded-lg bg-white border border-gray-300 hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-                                onChange={(e) => setImage(e.target.files[0])}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter' && image) {
-                                        handleSubmit();
-                                        e.preventDefault();
-                                    }
-                                }}
-                            />
+                            <label className="block mb-2 text-lg text-gray-700">Upload Gambar:</label>
+                            {isCameraOpen ? (
+                                <div>
+                                    <video id="camera-preview" autoPlay playsInline width="100%" height="100%" ref={videoRef => {
+                                        if (videoRef && videoStream) {
+                                            videoRef.srcObject = videoStream;
+                                        }
+                                    }} />
+                                    <button className="bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 mt-2" onClick={captureImage}>Ambil Gambar</button>
+                                    <button className="bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 mt-2" onClick={closeCamera}>Tutup Kamera</button>
+                                </div>
+                            ) : (
+                                <>
+                                    <input
+                                        type="file"
+                                        accept="image/*;capture=camera"
+                                        className="w-full p-4 text-lg rounded-lg bg-white border border-gray-300 hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                                        onChange={(e) => setImage(e.target.files[0])}
+                                    />
+                                    <button className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 mt-2" onClick={openCamera}>Buka Kamera</button>
+                                </>
+                            )}
                         </div>
-
                         <input
                             type="text"
                             placeholder="Lokasi"

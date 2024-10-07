@@ -111,7 +111,7 @@ class LaporanController extends Controller
         $laporan->save();
 
         // Kembali ke halaman dashboard
-        return redirect('/dashboard')->with('message', 'Laporan berhasil disimpan');
+        // return redirect('/dashboard')->with('message', 'Laporan berhasil disimpan');
     }
 
     public function deleteAllUploads()
