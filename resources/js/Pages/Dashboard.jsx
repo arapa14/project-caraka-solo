@@ -18,7 +18,14 @@ export default function Dashboard(props) {
     const [videoStream, setVideoStream] = useState(null); // Video stream from the camera
 
     const ENABLE_TIME_RESTRICTION = false;
-    
+
+    useEffect(() => {
+        // Retrieve the reportCount from localStorage when the component mounts
+        const storedCount = localStorage.getItem('reportCount');
+        if (storedCount) {
+            setReportCount(parseInt(storedCount, 10)); // Parse stored value and set it as reportCount
+        }
+    }, []);
 
     const handleSubmit = () => {
         const now = new Date();
@@ -66,7 +73,10 @@ export default function Dashboard(props) {
                 localStorage.setItem('lastUpload', now);
 
                 // Update report count: increment, but reset to 1 if greater than 3
-                setReportCount(prevCount => (prevCount >= 3 ? 1 : prevCount + 1));
+                const newCount = reportCount >= 3 ? 1 : reportCount + 1;
+                setReportCount(newCount);
+                localStorage.setItem('reportCount', newCount);  // Store the updated count in localStorage
+
 
                 // Keep notification visible for 10 seconds
                 setTimeout(() => {
