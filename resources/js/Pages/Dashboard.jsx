@@ -11,13 +11,13 @@ export default function Dashboard(props) {
     const [showModal, setShowModal] = useState(false); // Modal visibility state
     const [alreadyModal, setAleadyModal] = useState(false);
     const [reportCount, setReportCount] = useState(1); // To track the count of reports
-    console.log('julah laporan', reportCount)
+    console.log('jumlah laporan', reportCount)
 
     // Camera state
     const [isCameraOpen, setIsCameraOpen] = useState(false); // Control camera state
     const [videoStream, setVideoStream] = useState(null); // Video stream from the camera
 
-    const ENABLE_TIME_RESTRICTION = false;
+    const ENABLE_TIME_RESTRICTION = true;
 
     useEffect(() => {
         // Retrieve the reportCount from localStorage when the component mounts
@@ -34,8 +34,8 @@ export default function Dashboard(props) {
         const previousUpload = localStorage.getItem('lastUpload');
 
         // Define time windows
-        const morningWindow = currentHour >= 6 && currentHour < 12;
-        const afternoonWindow = currentHour >= 12 && currentHour < 15;
+        const morningWindow = currentHour >= 6 && currentHour < 8;
+        const afternoonWindow = currentHour >= 11 && currentHour < 14;
         const eveningWindow = currentHour >= 15 && currentHour < 17;
 
         // If time restriction is enabled, check the allowed time windows
@@ -206,28 +206,14 @@ export default function Dashboard(props) {
                         />
 
                         <div className="mb-4">
-                            <label className="block mb-2 text-lg text-gray-700">Upload Gambar:</label>
-                            {isCameraOpen ? (
-                                <div>
-                                    <video id="camera-preview" autoPlay playsInline width="100%" height="100%" ref={videoRef => {
-                                        if (videoRef && videoStream) {
-                                            videoRef.srcObject = videoStream;
-                                        }
-                                    }} />
-                                    <button className="bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 mt-2" onClick={captureImage}>Ambil Gambar</button>
-                                    <button className="bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 mt-2" onClick={closeCamera}>Tutup Kamera</button>
-                                </div>
-                            ) : (
-                                <>
-                                    <input
-                                        type="file"
-                                        accept="image/*;capture=camera"
-                                        className="w-full p-4 text-lg rounded-lg bg-white border border-gray-300 hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-                                        onChange={(e) => setImage(e.target.files[0])}
-                                    />
-                                    <button className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 mt-2" onClick={openCamera}>Buka Kamera</button>
-                                </>
-                            )}
+                            <input
+                                type="file"
+                                accept="image/*"
+                                capture="environment"
+                                className="w-full p-4 text-lg rounded-lg bg-white border border-gray-300 hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                                onClick={openCamera} 
+                                onChange={(e) => setImage(e.target.files[0])}
+                            />
                         </div>
                         <input
                             type="text"
