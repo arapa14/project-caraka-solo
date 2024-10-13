@@ -11,13 +11,47 @@ export default function Dashboard(props) {
     const [showModal, setShowModal] = useState(false); // Modal visibility state
     const [alreadyModal, setAleadyModal] = useState(false);
     const [reportCount, setReportCount] = useState(1); // To track the count of reports
-    console.log('jumlah laporan', reportCount)
-
-    // Camera state
-    const [isCameraOpen, setIsCameraOpen] = useState(false); // Control camera state
-    const [videoStream, setVideoStream] = useState(null); // Video stream from the camera
+    const [currentTime, setCurrentTime] = useState('');
+    const [greeting, setGreeting] = useState('');
 
     const ENABLE_TIME_RESTRICTION = true;
+
+    useEffect(() => {
+        const serverTime = new Date(props.serverTime);
+
+        const updateTime = () => {
+            serverTime.setSeconds(serverTime.getSeconds() + 1);
+
+            const dayOptions = { weekday: 'long' };
+            const dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+
+            const day = serverTime.toLocaleDateString('id-ID', dayOptions);
+            const date = serverTime.toLocaleDateString('id-ID', dateOptions);
+            const time = serverTime.toLocaleTimeString('id-ID');
+
+            const currentHour = serverTime.getHours();
+            let greetingText = '';
+
+            if (currentHour >= 6 && currentHour < 12) {
+                greetingText = 'Pagi';
+            } else if (currentHour >= 12 && currentHour < 15) {
+                greetingText = 'Siang';
+            } else if (currentHour >= 15 && currentHour < 18) {
+                greetingText = 'Sore';
+            } else {
+                greetingText = 'Malam';
+            }
+
+            setCurrentTime(`${day}, ${date} - ${time}`);
+            setGreeting(greetingText);
+        };
+
+        updateTime();
+        const intervalId = setInterval(updateTime, 1000);
+
+        return () => clearInterval(intervalId);
+    }, [props.serverTime]);
+
 
     useEffect(() => {
         // Retrieve the reportCount from localStorage when the component mounts
@@ -82,7 +116,7 @@ export default function Dashboard(props) {
                 setTimeout(() => {
                     setIsNotif(false);
                     router.get('/laporan');
-                }, 3000);
+                }, 5000);
 
             },
             onError: () => {
@@ -91,42 +125,6 @@ export default function Dashboard(props) {
         });
     };
 
-    // Function to open the camera
-    const openCamera = () => {
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-            navigator.mediaDevices.getUserMedia({ video: true })
-                .then((stream) => {
-                    // Handle the stream
-                })
-                .catch((error) => {
-                    console.error("Error accessing camera: ", error);
-                });
-        } else {
-            alert("getUserMedia is not supported by your browser.");
-        }
-    };
-
-    // Function to capture image from the camera
-    const captureImage = () => {
-        const videoElement = document.getElementById('camera-preview');
-        const canvas = document.createElement('canvas');
-        canvas.width = videoElement.videoWidth;
-        canvas.height = videoElement.videoHeight;
-        const context = canvas.getContext('2d');
-        context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-        const imageData = canvas.toDataURL('image/png');
-        setImage(imageData);
-        closeCamera();
-    };
-
-    // Function to close the camera
-    const closeCamera = () => {
-        if (videoStream) {
-            const tracks = videoStream.getTracks();
-            tracks.forEach(track => track.stop());
-        }
-        setIsCameraOpen(false);
-    };
 
 
     useEffect(() => {
@@ -137,7 +135,14 @@ export default function Dashboard(props) {
 
     return (
         <AuthenticatedLayout
-            header={<h2 className="text-4xl font-bold text-blue-700">Caraka Dashboard</h2>}
+            header={
+                <div className="flex flex-col sm:flex-row items-center justify-between p-4 bg-white shadow-lg rounded-lg">
+                    <h2 className="text-2xl sm:text-4xl font-bold text-blue-700 mb-2 sm:mb-0">
+                        Caraka Dashboard
+                    </h2>
+                    <span className="text-gray-500 text-right">{greeting} - {currentTime}</span>
+                </div>}
+
         >
             <Head title="Dashboard" />
 
@@ -211,7 +216,6 @@ export default function Dashboard(props) {
                                 accept="image/*"
                                 capture="environment"
                                 className="w-full p-4 text-lg rounded-lg bg-white border border-gray-300 hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-                                onClick={openCamera} 
                                 onChange={(e) => setImage(e.target.files[0])}
                             />
                         </div>
@@ -308,6 +312,6 @@ export default function Dashboard(props) {
 
                 </div>
             </div>
-        </AuthenticatedLayout>
+        </AuthenticatedLayout >
     );
 }
