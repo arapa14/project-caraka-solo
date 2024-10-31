@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
+use Carbon\Carbon;
 use Imagick;
 use ImagickDraw;
 use ImagickPixel;
@@ -144,11 +145,13 @@ class LaporanController extends Controller
         // Ambil semua laporan berdasarkan nama user yang sedang login
         $name = Auth::user()->name;
         $laporanUser = Laporan::where('name', $name)->orderByDesc('id')->paginate(6);
+        $serverTime = Carbon::now()->toDateTimeString(); // Mengambil waktu server
 
         // dd($laporanUser);
         return Inertia::render('Dashboard', [
             'title' => 'Reviewer',
             'laporan' => $laporanUser,
+            'serverTime' => $serverTime
         ]);
     }
 
