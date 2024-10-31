@@ -14,7 +14,7 @@ export default function Dashboard(props) {
     const [currentTime, setCurrentTime] = useState('');
     const [greeting, setGreeting] = useState('');
 
-    const ENABLE_TIME_RESTRICTION = true;
+    const ENABLE_TIME_RESTRICTION = false;
 
     useEffect(() => {
         const serverTime = new Date(props.serverTime);
@@ -296,7 +296,7 @@ export default function Dashboard(props) {
                                                 {laporan.location}
                                             </div>
                                             <div className="text-sm text-red-500">
-                                                UnApproved
+                                                {laporan.status}
                                             </div>
                                         </div>
                                     </div>

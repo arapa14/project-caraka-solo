@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('location');
             $table->integer('jumlah');
             $table->string('image', );
+            $table->enum('status', ['Pending', 'unApproved', 'Approved'])->default('Pending');
             $table->timestamps();
         });
     }

@@ -28,7 +28,7 @@ const isLaporan = (laporan) => {
                             {data.location}
                         </div>
                         <div className="text-sm text-red-500">
-                            UnApproved
+                            {data.status}
                         </div>
                     </div>
                 </div>
