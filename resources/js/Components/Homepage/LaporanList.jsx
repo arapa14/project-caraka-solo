@@ -1,3 +1,5 @@
+import { Select } from "@headlessui/react";
+
 const isLaporan = (laporan) => {
     return laporan.map((data, i) => {
         return (
@@ -27,8 +29,12 @@ const isLaporan = (laporan) => {
                         <div className="text-sm text-gray-500">
                             {data.location}
                         </div>
-                        <div className="text-sm text-red-500">
-                            {data.status}
+                        <div className="text-sm text-red-500 cursor-pointer">
+                            <select className="border border-gray-300 rounded p-1">
+                                <option value="Pending">Pending</option>
+                                <option value="UnApprove">UnApprove</option>
+                                <option value="Approve">Approve</option>
+                            </select>
                         </div>
                     </div>
                 </div>
