@@ -155,6 +155,7 @@ class LaporanController extends Controller
         ]);
     }
 
+
     /**
      * Show the form for editing the specified resource.
      */
@@ -166,9 +167,23 @@ class LaporanController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Laporan $laporan)
+    public function update(Request $request, $id)
     {
-        //
+        $laporan = Laporan::find($id);
+        if (!$laporan) {
+            return response()->json(['message' => 'Laporan not found'], 404);
+        }
+
+        // Validasi status
+        $validatedData = $request->validate([
+            'status' => 'required|string|in:Pending,unApproved,Approved',
+        ]);
+
+        // Update status
+        $laporan->status = $validatedData['status'];
+        $laporan->save();
+
+        return response()->json(['message' => 'Status updated successfully']);
     }
 
     /**

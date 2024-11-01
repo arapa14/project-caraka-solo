@@ -50,6 +50,8 @@ Route::middleware(['auth', 'isCaraka'])->group(function() {
 
 //Switch Account
 Route::get('/switch/{id}', [SwitchAccountController::class, 'switchAccount'])->name('switch-account');
+Route::put('/api/laporan/{id}', [LaporanController::class, 'update']);
+
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
