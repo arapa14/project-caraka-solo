@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const LaporanList = ({ laporan }) => {
     const [dataLaporan, setDataLaporan] = useState(laporan.data || []);
@@ -14,17 +14,43 @@ const LaporanList = ({ laporan }) => {
                 },
                 body: JSON.stringify({ status: newStatus }),
             });
-    
+
             if (!response.ok) {
                 throw new Error("Gagal memperbarui status.");
             }
-    
+
+            // Memperbarui status di state secara langsung
+            setDataLaporan(prevData =>
+                prevData.map(item =>
+                    item.id === id ? { ...item, status: newStatus } : item
+                )
+            );
+
             console.log("Status berhasil diperbarui");
         } catch (error) {
             console.error("Error:", error);
         }
     };
-    
+
+    // Mengambil data saat komponen pertama kali dimuat
+    useEffect(() => {
+        // Jika Anda ingin mengambil data awal dari server, bisa panggil fetchLaporan di sini
+    }, []);
+
+    // Fungsi untuk menentukan kelas berdasarkan status
+    const getStatusColor = (status) => {
+        switch (status) {
+            case "Pending":
+                return "bg-yellow-100 text-yellow-700";
+            case "unApproved":
+                return "bg-red-100 text-red-700";
+            case "Approved":
+                return "bg-blue-100 text-blue-700";
+            default:
+                return "";
+        }
+    };
+
     return dataLaporan.length > 0 ? (
         dataLaporan.map((data, i) => (
             <div key={i} className="card w-full lg:w-96 bg-white shadow-md rounded-lg overflow-hidden mb-6">
@@ -45,9 +71,9 @@ const LaporanList = ({ laporan }) => {
                     <p className="text-gray-700 mb-4">{data.description}</p>
                     <div className="flex justify-between items-center">
                         <div className="text-sm text-gray-500">{data.location}</div>
-                        <div className="text-sm text-red-500 cursor-pointer">
+                        <div className="text-sm cursor-pointer">
                             <select
-                                className="border border-gray-300 rounded p-1"
+                                className={`border border-gray-300 rounded p-1 ${getStatusColor(data.status)} transition duration-200 ease-in-out focus:outline-none`}
                                 value={data.status}
                                 onChange={(e) => handleStatusChange(data.id, e.target.value)}
                             >
@@ -55,6 +81,7 @@ const LaporanList = ({ laporan }) => {
                                 <option value="unApproved">UnApproved</option>
                                 <option value="Approved">Approved</option>
                             </select>
+
                         </div>
                     </div>
                 </div>

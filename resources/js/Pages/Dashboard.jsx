@@ -295,9 +295,11 @@ export default function Dashboard(props) {
                                             <div className="text-sm text-gray-500">
                                                 {laporan.location}
                                             </div>
-                                            <div className="text-sm text-red-500">
+                                            <div className={`text-sm font-medium py-1 px-3 rounded ${laporan.status === 'Pending' ? 'bg-yellow-100 text-yellow-600' : laporan.status === 'unApproved' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
                                                 {laporan.status}
                                             </div>
+
+
                                         </div>
                                     </div>
                                 </div>
