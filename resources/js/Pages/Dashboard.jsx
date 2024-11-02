@@ -10,7 +10,6 @@ export default function Dashboard(props) {
     const [isNotif, setIsNotif] = useState(false);
     const [showModal, setShowModal] = useState(false); // Modal visibility state
     const [alreadyModal, setAleadyModal] = useState(false);
-    const [reportCount, setReportCount] = useState(1); // To track the count of reports
     const [currentTime, setCurrentTime] = useState('');
     const [greeting, setGreeting] = useState('');
 
@@ -53,34 +52,27 @@ export default function Dashboard(props) {
     }, [props.serverTime]);
 
 
-    useEffect(() => {
-        // Retrieve the reportCount from localStorage when the component mounts
-        const storedCount = localStorage.getItem('reportCount');
-        if (storedCount) {
-            setReportCount(parseInt(storedCount, 10)); // Parse stored value and set it as reportCount
-        }
-    }, []);
-
     const handleSubmit = () => {
         const now = new Date();
         const currentHour = now.getHours();
         const currentDay = now.getDate();
         const previousUpload = localStorage.getItem('lastUpload');
 
-        // Define time windows
-        const morningWindow = currentHour >= 6 && currentHour < 8;
-        const afternoonWindow = currentHour >= 11 && currentHour < 14;
-        const eveningWindow = currentHour >= 15 && currentHour < 17;
+        // Define waktu based on time windows
+        let waktu = '';
+        if (currentHour >= 6 && currentHour < 12) {
+            waktu = 'Pagi';
+        } else if (currentHour >= 12 && currentHour < 15) {
+            waktu = 'Siang';
+        } else if (currentHour >= 15 && currentHour < 18) {
+            waktu = 'Sore';
+        } else {
+            waktu = 'Invalid';
+        }
 
-        // If time restriction is enabled, check the allowed time windows
+        // Check if the user already submitted for this time window
         if (ENABLE_TIME_RESTRICTION) {
-            if (!(morningWindow || afternoonWindow || eveningWindow)) {
-                setShowModal(true); // Show modal instead of alert
-                return;
-            }
-
-            // Prevent multiple uploads in the same time window
-            if (previousUpload && new Date(previousUpload).getDate() === currentDay) {
+            if (previousUpload && new Date(previousUpload).getDate() === currentDay && localStorage.getItem('waktu') === waktu) {
                 setAleadyModal(true); // Show modal instead of alert
                 return;
             }
@@ -91,7 +83,7 @@ export default function Dashboard(props) {
             user_id: props.auth.user.id,
             description,
             location,
-            jumlah: reportCount, // Use the current report count
+            waktu, // Use the current waktu
             image,
         };
 
@@ -105,25 +97,19 @@ export default function Dashboard(props) {
                 setIsNotif(true);
                 setImage('');
                 localStorage.setItem('lastUpload', now);
+                localStorage.setItem('waktu', waktu); // Store the waktu in localStorage
 
-                // Update report count: increment, but reset to 1 if greater than 3
-                const newCount = reportCount >= 3 ? 1 : reportCount + 1;
-                setReportCount(newCount);
-                localStorage.setItem('reportCount', newCount);  // Store the updated count in localStorage
-
-
-                // Keep notification visible for 10 seconds
                 setTimeout(() => {
                     setIsNotif(false);
                     router.get('/laporan');
                 }, 5000);
-
             },
             onError: () => {
                 setIsNotif(false);
             }
         });
     };
+
 
 
 
@@ -136,7 +122,7 @@ export default function Dashboard(props) {
     useEffect(() => {
         const storedDate = localStorage.getItem('lastResetDate');
         const todayDate = new Date().toLocaleDateString('id-ID');
-    
+
         if (storedDate !== todayDate) {
             // Jika hari telah berganti, reset laporan di dashboard
             localStorage.removeItem('reportCount');
@@ -144,7 +130,7 @@ export default function Dashboard(props) {
             setReportCount(1); // Reset counter
         }
     }, []);
-    
+
 
     return (
         <AuthenticatedLayout
@@ -303,7 +289,7 @@ export default function Dashboard(props) {
                                         <h2 className="text-2xl font-bold text-blue-600 mb-2">
                                             {laporan.name}
                                             <div className="inline-block ml-2 bg-blue-100 text-blue-700 text-xs font-semibold px-2 py-1 rounded">
-                                                Laporan : {laporan.jumlah}
+                                                Laporan : {laporan.waktu}
                                             </div>
                                         </h2>
                                         {/* Deskripsi */}

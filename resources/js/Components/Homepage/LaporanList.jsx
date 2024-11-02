@@ -6,11 +6,13 @@ const LaporanList = ({ laporan }) => {
     // Fungsi untuk mengubah status dan mengirim data ke server
     const handleStatusChange = async (id, newStatus) => {
         try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
             const response = await fetch(`/api/laporan/${id}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": document.head.querySelector('meta[name="csrf-token"]').content, // Menyertakan token CSRF
+                    "X-CSRF-Token": csrfToken,  // Notice "X-CSRF-Token" here instead of "X-CSRF-TOKEN"
                 },
                 body: JSON.stringify({ status: newStatus }),
             });
@@ -65,7 +67,7 @@ const LaporanList = ({ laporan }) => {
                     <h2 className="text-2xl font-bold text-blue-600 mb-2">
                         {data.name}
                         <div className="inline-block ml-2 bg-blue-100 text-blue-700 text-xs font-semibold px-2 py-1 rounded">
-                            {data.jumlah} Laporan
+                            Laporan {data.waktu}
                         </div>
                     </h2>
                     <p className="text-gray-700 mb-4">{data.description}</p>

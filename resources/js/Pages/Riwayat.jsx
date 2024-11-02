@@ -4,6 +4,7 @@ import React from 'react';
 import Paginator from '@/Components/Homepage/Paginator';
 
 export default function Riwayat({ laporan }) {
+    console.log(laporan);
     return (
         <AuthenticatedLayout>
             <Head title="Riwayat Laporan" />

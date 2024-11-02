@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('description');
             $table->string('location');
-            $table->integer('jumlah');
+            $table->enum('waktu', ['Pagi', 'Siang', 'Malam', 'Invalid'])->default('Invalid');
             $table->string('image', );
             $table->enum('status', ['Pending', 'unApproved', 'Approved'])->default('Pending');
             $table->timestamps();

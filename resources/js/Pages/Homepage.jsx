@@ -5,8 +5,6 @@ import LaporanList from "@/Components/Homepage/LaporanList";
 import Paginator from "@/Components/Homepage/Paginator";
 
 export default function Homepage(props) {
-    console.log('props di homepage', props);
-    console.log('props.laporan', props.laporan);
     
     return (
         <div className="min-h-screen bg-gray-100">

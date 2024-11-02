@@ -48,7 +48,7 @@ class LaporanController extends Controller
             'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048', // Added max size validation
             'description' => 'required|string',
             'location' => 'required|string',
-            'jumlah' => 'nullable|integer', // Ensure jumlah is validated
+            'waktu' => 'required|in:Pagi,Siang,Sore,Invalid', // Validate waktu input
         ]);
 
         // Mengunggah gambar
@@ -60,8 +60,8 @@ class LaporanController extends Controller
         $laporan->name = Auth::user()->name; // Ambil nama pengguna yang sedang login
         $laporan->description = $request->description;
         $laporan->location = $request->location;
-        $laporan->jumlah = $request->jumlah; // Ambil jumlah dari request
-        // dd($laporan->jumlah);
+        $laporan->waktu = $request->waktu; // Ambil waktu dari request
+        // dd($laporan);
 
         // Watermarking logic
         if ($request->hasFile('image')) {
@@ -189,13 +189,16 @@ class LaporanController extends Controller
     public function riwayat()
     {
         $allReports = Laporan::where('id', Auth::id())
-                    ->orderBy('created_at', 'desc')
-                    ->paginate(10);
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
+        // dd(Auth::id()); 
 
         return inertia('Riwayat', [
             'laporan' => $allReports
         ]);
     }
+
 
     /**
      * Remove the specified resource from storage.
