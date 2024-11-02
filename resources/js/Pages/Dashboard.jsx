@@ -133,6 +133,19 @@ export default function Dashboard(props) {
         }
     }, [props.laporan]);
 
+    useEffect(() => {
+        const storedDate = localStorage.getItem('lastResetDate');
+        const todayDate = new Date().toLocaleDateString('id-ID');
+    
+        if (storedDate !== todayDate) {
+            // Jika hari telah berganti, reset laporan di dashboard
+            localStorage.removeItem('reportCount');
+            localStorage.setItem('lastResetDate', todayDate);
+            setReportCount(1); // Reset counter
+        }
+    }, []);
+    
+
     return (
         <AuthenticatedLayout
             header={
@@ -148,6 +161,13 @@ export default function Dashboard(props) {
 
             <div className="py-12 bg-gray-100">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+                    <button
+                        className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white py-3 px-6 rounded-full text-base sm:text-lg font-semibold shadow-md transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                        onClick={() => router.get('/riwayat')}
+                    >
+                        Lihat Riwayat
+                    </button>
+
                     {/* Notification for success */}
                     {isNotif && (
                         <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-lg mb-8">

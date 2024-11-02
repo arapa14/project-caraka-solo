@@ -45,6 +45,7 @@ Route::middleware(['auth', 'isCaraka'])->group(function() {
     });
     Route::post('/laporan', [LaporanController::class, 'store']);
     Route::get('/laporan', [LaporanController::class, 'show']);
+    Route::get('/riwayat', [LaporanController::class, 'riwayat'])->name('laporan.riwayat');
 });
 
 

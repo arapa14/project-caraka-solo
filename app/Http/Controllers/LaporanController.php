@@ -186,6 +186,17 @@ class LaporanController extends Controller
         return response()->json(['message' => 'Status updated successfully']);
     }
 
+    public function riwayat()
+    {
+        $allReports = Laporan::where('id', Auth::id())
+                    ->orderBy('created_at', 'desc')
+                    ->paginate(10);
+
+        return inertia('Riwayat', [
+            'laporan' => $allReports
+        ]);
+    }
+
     /**
      * Remove the specified resource from storage.
      */
