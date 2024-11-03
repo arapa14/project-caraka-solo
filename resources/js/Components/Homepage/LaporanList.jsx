@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState } from "react";
 
 const LaporanList = ({ laporan }) => {
     const [dataLaporan, setDataLaporan] = useState(laporan.data || []);
@@ -12,7 +12,7 @@ const LaporanList = ({ laporan }) => {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
-                    "X-CSRF-Token": csrfToken,  // Notice "X-CSRF-Token" here instead of "X-CSRF-TOKEN"
+                    "X-CSRF-Token": csrfToken,
                 },
                 body: JSON.stringify({ status: newStatus }),
             });
@@ -21,11 +21,8 @@ const LaporanList = ({ laporan }) => {
                 throw new Error("Gagal memperbarui status.");
             }
 
-            // Memperbarui status di state secara langsung
-            setDataLaporan(prevData =>
-                prevData.map(item =>
-                    item.id === id ? { ...item, status: newStatus } : item
-                )
+            setDataLaporan((prevData) =>
+                prevData.map((item) => (item.id === id ? { ...item, status: newStatus } : item))
             );
 
             console.log("Status berhasil diperbarui");
@@ -34,10 +31,26 @@ const LaporanList = ({ laporan }) => {
         }
     };
 
-    // Mengambil data saat komponen pertama kali dimuat
-    useEffect(() => {
-        // Jika Anda ingin mengambil data awal dari server, bisa panggil fetchLaporan di sini
-    }, []);
+    // Fungsi untuk mengelompokkan laporan berdasarkan tanggal dan nama user
+    const groupReportsByDateAndUser = (data) => {
+        return data.reduce((acc, laporanItem) => {
+            const date = new Date(laporanItem.created_at).toLocaleDateString("id-ID", {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+            });
+            const user = laporanItem.name;
+
+            if (!acc[date]) acc[date] = {};
+            if (!acc[date][user]) acc[date][user] = [];
+
+            acc[date][user].push(laporanItem);
+            return acc;
+        }, {});
+    };
+
+    // Mengelompokkan laporan berdasarkan tanggal dan user
+    const groupedLaporan = groupReportsByDateAndUser(dataLaporan);
 
     // Fungsi untuk menentukan kelas berdasarkan status
     const getStatusColor = (status) => {
@@ -47,51 +60,61 @@ const LaporanList = ({ laporan }) => {
             case "unApproved":
                 return "bg-red-100 text-red-700";
             case "Approved":
-                return "bg-blue-100 text-blue-700";
+                return "bg-green-100 text-green-700";
             default:
                 return "";
         }
     };
 
-    return dataLaporan.length > 0 ? (
-        dataLaporan.map((data, i) => (
-            <div key={i} className="card w-full lg:w-96 bg-white shadow-md rounded-lg overflow-hidden mb-6">
-                <figure className="h-64 w-full">
-                    <img
-                        src={`/storage/uploads/${data.image}`}
-                        alt={data.description}
-                        className="w-full h-full object-cover object-center"
-                    />
-                </figure>
-                <div className="p-6">
-                    <h2 className="text-2xl font-bold text-blue-600 mb-2">
-                        {data.name}
-                        <div className="inline-block ml-2 bg-blue-100 text-blue-700 text-xs font-semibold px-2 py-1 rounded">
-                            Laporan {data.waktu}
+    return (
+        <div className="container mx-auto p-6">
+            {Object.keys(groupedLaporan).map((date) => (
+                <div key={date} className="mb-8">
+                    <h2 className="text-2xl font-bold text-gray-800 mb-6 border-b-2 pb-2 border-gray-200">{date}</h2>
+                    {Object.keys(groupedLaporan[date]).map((user) => (
+                        <div key={user} className="mb-6">
+                            <h3 className="text-xl font-semibold text-blue-600 mb-4">{user}</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {groupedLaporan[date][user].map((data, i) => (
+                                    <div key={i} className="bg-white shadow-lg rounded-lg overflow-hidden">
+                                        <figure className="h-48 w-full">
+                                            <img
+                                                src={`/storage/uploads/${data.image}`}
+                                                alt={data.description}
+                                                className="w-full h-full object-cover object-center"
+                                            />
+                                        </figure>
+                                        <div className="p-5">
+                                            <h4 className="text-lg font-bold text-blue-600 mb-2">
+                                                Laporan {data.waktu}
+                                            </h4>
+                                            <p className="text-gray-700 mb-4">{data.description}</p>
+                                            <div className="flex justify-between items-center">
+                                                <div className="text-sm text-gray-500">{data.location}</div>
+                                                <div>
+                                                    <select
+                                                        className={`border border-gray-300 rounded p-1 ${getStatusColor(
+                                                            data.status
+                                                        )} transition duration-200 ease-in-out focus:outline-none`}
+                                                        value={data.status}
+                                                        onChange={(e) =>
+                                                            handleStatusChange(data.id, e.target.value)
+                                                        }
+                                                    >
+                                                        <option value="Pending">Pending</option>
+                                                        <option value="unApproved">UnApproved</option>
+                                                        <option value="Approved">Approved</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
-                    </h2>
-                    <p className="text-gray-700 mb-4">{data.description}</p>
-                    <div className="flex justify-between items-center">
-                        <div className="text-sm text-gray-500">{data.location}</div>
-                        <div className="text-sm cursor-pointer">
-                            <select
-                                className={`border border-gray-300 rounded p-1 ${getStatusColor(data.status)} transition duration-200 ease-in-out focus:outline-none`}
-                                value={data.status}
-                                onChange={(e) => handleStatusChange(data.id, e.target.value)}
-                            >
-                                <option value="Pending">Pending</option>
-                                <option value="unApproved">UnApproved</option>
-                                <option value="Approved">Approved</option>
-                            </select>
-
-                        </div>
-                    </div>
+                    ))}
                 </div>
-            </div>
-        ))
-    ) : (
-        <div className="text-center py-10 text-gray-500">
-            Saat ini belum ada laporan yang tersedia
+            ))}
         </div>
     );
 };
