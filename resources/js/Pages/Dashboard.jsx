@@ -119,7 +119,9 @@ export default function Dashboard(props) {
         }
     }, [props.laporan]);
 
-
+    // Get today's date
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set to start of the day for accurate comparison
 
     return (
         <AuthenticatedLayout
@@ -261,44 +263,44 @@ export default function Dashboard(props) {
                     )}
 
                     {/* List report */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                     {/* Render laporan list */}
+                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {props.laporan && props.laporan.data.length > 0 &&
-                            props.laporan.data.map((laporan, i) => (
-                                <div key={i} className="card w-full lg:w-96 bg-white shadow-md rounded-lg overflow-hidden mb-6">
-                                    {/* Gambar dengan tampilan yang responsif dan memenuhi container */}
-                                    <figure className="h-64 w-full"> {/* Mengatur tinggi figure secara konsisten */}
-                                        <img
-                                            src={`/storage/uploads/${laporan.image}`}
-                                            alt={laporan.description}
-                                            className="w-full h-full object-cover object-center" // object-cover untuk mengisi container secara proporsional
-                                        />
-                                    </figure>
-                                    <div className="p-6">
-                                        {/* Title dengan badge */}
-                                        <h2 className="text-2xl font-bold text-blue-600 mb-2">
-                                            {laporan.name}
-                                            <div className="inline-block ml-2 bg-blue-100 text-blue-700 text-xs font-semibold px-2 py-1 rounded">
-                                                Laporan : {laporan.waktu}
-                                            </div>
-                                        </h2>
-                                        {/* Deskripsi */}
-                                        <p className="text-gray-700 mb-4">
-                                            {laporan.description}
-                                        </p>
-                                        {/* Lokasi dan status */}
-                                        <div className="flex justify-between items-center">
-                                            <div className="text-sm text-gray-500">
-                                                {laporan.location}
-                                            </div>
-                                            <div className={`text-sm font-medium py-1 px-3 rounded ${laporan.status === 'Pending' ? 'bg-yellow-100 text-yellow-600' : laporan.status === 'unApproved' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
-                                                {laporan.status}
-                                            </div>
+                            props.laporan.data.map((laporan, i) => {
+                                const laporanDate = new Date(laporan.created_at);
+                                laporanDate.setHours(0, 0, 0, 0); // Set to start of the day
 
-
+                                // Only show the report if it was created today
+                                if (laporanDate.getTime() === today.getTime()) {
+                                    return (
+                                        <div key={i} className="card w-full lg:w-96 bg-white shadow-md rounded-lg overflow-hidden mb-6">
+                                            <figure className="h-64 w-full">
+                                                <img
+                                                    src={`/storage/uploads/${laporan.image}`}
+                                                    alt={laporan.description}
+                                                    className="w-full h-full object-cover object-center"
+                                                />
+                                            </figure>
+                                            <div className="p-6">
+                                                <h2 className="text-2xl font-bold text-blue-600 mb-2">
+                                                    {laporan.name}
+                                                    <div className="inline-block ml-2 bg-blue-100 text-blue-700 text-xs font-semibold px-2 py-1 rounded">
+                                                        Laporan : {laporan.waktu}
+                                                    </div>
+                                                </h2>
+                                                <p className="text-gray-700 mb-4">{laporan.description}</p>
+                                                <div className="flex justify-between items-center">
+                                                    <div className="text-sm text-gray-500">{laporan.location}</div>
+                                                    <div className={`text-sm font-medium py-1 px-3 rounded ${laporan.status === 'Pending' ? 'bg-yellow-100 text-yellow-600' : laporan.status === 'unApproved' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
+                                                        {laporan.status}
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                </div>
-                            ))
+                                    );
+                                }
+                                return null; // Hide the report if it wasn't created today
+                            })
                         }
                     </div>
 
