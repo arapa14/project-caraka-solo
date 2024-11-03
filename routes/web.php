@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SwitchAccountController;
+use App\Http\Controllers\userController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -26,6 +27,11 @@ Route::middleware(['auth', 'isAdmin'])->group(function () {
     Route::post('register', [RegisteredUserController::class, 'store']);
 
     Route::delete('/uploads', [LaporanController::class, 'deleteAllUploads']);
+
+    Route::get('/admin/users', [UserController::class, 'index'])->name('user.index');
+    Route::post('/admin/users', [UserController::class, 'store'])->name('user.store');
+    Route::put('/admin/users/{id}', [UserController::class, 'update'])->name('user.update');
+    Route::delete('/admin/users/{id}', [UserController::class, 'destroy'])->name('user.destroy');
 });
 
 Route::middleware(['auth', 'isReviewer'])->group(function() {
