@@ -13,13 +13,17 @@ return new class extends Migration
     {
         Schema::create('laporans', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('user_id'); // Menambahkan kolom user_id
             $table->string('name');
             $table->string('description');
             $table->string('location');
-            $table->enum('waktu', ['Pagi', 'Siang', 'Malam', 'Invalid'])->default('Invalid');
-            $table->string('image', );
+            $table->enum('waktu', ['Pagi', 'Siang', 'Sore', 'Invalid'])->default('Invalid');
+            $table->string('image');
             $table->enum('status', ['Pending', 'unApproved', 'Approved'])->default('Pending');
             $table->timestamps();
+
+            // Menambahkan foreign key constraint untuk user_id
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
 
@@ -28,6 +32,12 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::table('laporans', function (Blueprint $table) {
+            if (Schema::hasColumn('laporans', 'user_id')) {
+                $table->dropForeign(['user_id']); // Menghapus foreign key jika ada
+            }
+        });
         Schema::dropIfExists('laporans');
     }
+    
 };

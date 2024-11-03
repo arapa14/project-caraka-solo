@@ -45,13 +45,13 @@ Route::middleware(['auth', 'isCaraka'])->group(function() {
     });
     Route::post('/laporan', [LaporanController::class, 'store']);
     Route::get('/laporan', [LaporanController::class, 'show']);
-    Route::get('/riwayat', [LaporanController::class, 'riwayat'])->name('laporan.riwayat');
+    Route::get('/riwayat', [LaporanController::class, 'riwayat'])->name('riwayat');
 });
 
 
 //Switch Account
 Route::get('/switch/{id}', [SwitchAccountController::class, 'switchAccount'])->name('switch-account');
-Route::put('/api/laporan/{id}', [LaporanController::class, 'update']);
+Route::put('/laporan/{id}', [LaporanController::class, 'update']);
 
 
 Route::middleware('auth')->group(function () {

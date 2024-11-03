@@ -119,17 +119,6 @@ export default function Dashboard(props) {
         }
     }, [props.laporan]);
 
-    useEffect(() => {
-        const storedDate = localStorage.getItem('lastResetDate');
-        const todayDate = new Date().toLocaleDateString('id-ID');
-
-        if (storedDate !== todayDate) {
-            // Jika hari telah berganti, reset laporan di dashboard
-            localStorage.removeItem('reportCount');
-            localStorage.setItem('lastResetDate', todayDate);
-            setReportCount(1); // Reset counter
-        }
-    }, []);
 
 
     return (

@@ -57,6 +57,7 @@ class LaporanController extends Controller
 
         // Simpan laporan dengan nama yang diambil dari pengguna yang sedang login
         $laporan = new Laporan();
+        $laporan->user_id = Auth::id(); // Menyimpan user_id dari user yang sedang login
         $laporan->name = Auth::user()->name; // Ambil nama pengguna yang sedang login
         $laporan->description = $request->description;
         $laporan->location = $request->location;
@@ -188,13 +189,13 @@ class LaporanController extends Controller
 
     public function riwayat()
     {
-        $allReports = Laporan::where('id', Auth::id())
+        $allReports = Laporan::where('user_id', Auth::id())
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
         // dd(Auth::id()); 
 
-        return inertia('Riwayat', [
+        return Inertia::render('Riwayat', [
             'laporan' => $allReports
         ]);
     }

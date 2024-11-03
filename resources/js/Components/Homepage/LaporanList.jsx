@@ -8,7 +8,7 @@ const LaporanList = ({ laporan }) => {
         try {
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-            const response = await fetch(`/api/laporan/${id}`, {
+            const response = await fetch(`/laporan/${id}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
