@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import React from 'react';
 
 export default function Dashboard() {
@@ -13,9 +13,8 @@ export default function Dashboard() {
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                     },
                 });
-    
+
                 const contentType = response.headers.get('content-type');
-    
                 if (contentType && contentType.includes('application/json')) {
                     const data = await response.json();
                     if (response.ok) {
@@ -25,7 +24,6 @@ export default function Dashboard() {
                         alert('Failed to delete uploads: ' + data.message);
                     }
                 } else {
-                    // Handle non-JSON response (e.g., HTML error page)
                     const text = await response.text();
                     console.error('Unexpected response:', text);
                     alert('An error occurred while trying to delete uploads. Please check the logs.');
@@ -36,8 +34,6 @@ export default function Dashboard() {
             }
         }
     };
-    
-    
 
     return (
         <AuthenticatedLayout
@@ -47,21 +43,42 @@ export default function Dashboard() {
                 </h2>
             }
         >
-            <Head title="Dashboard" />
+            <Head title="Admin Dashboard" />
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                    <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg">
-                        <div className="p-6 text-gray-900">
-                            You're logged in!
+                    <div className="overflow-hidden bg-white shadow sm:rounded-lg">
+                        <div className="p-6 bg-gray-100 border-b border-gray-200">
+                            <h3 className="text-lg font-semibold text-gray-700">Admin Menu</h3>
+                            <div className="grid grid-cols-3 gap-6 mt-4">
+                                {/* CRUD User */}
+                                <Link
+                                    href="/admin/users"
+                                    className="p-4 text-center bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                                >
+                                    Manage Users
+                                </Link>
+
+                                {/* CRUD Tempat */}
+                                <Link
+                                    href="/admin/places"
+                                    className="p-4 text-center bg-green-600 text-white rounded-lg hover:bg-green-700"
+                                >
+                                    Manage Places
+                                </Link>
+
+                                {/* Other Admin Feature */}
+                                <button
+                                    className="p-4 text-center bg-red-600 text-white rounded-lg hover:bg-red-700"
+                                    onClick={handleDeleteAllUploads}
+                                >
+                                    Delete All Uploads
+                                </button>
+                            </div>
                         </div>
-                        <div className="p-6">
-                            <button
-                                className="bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700"
-                                onClick={handleDeleteAllUploads}
-                            >
-                                Delete All Uploads
-                            </button>
+
+                        <div className="p-6 text-gray-900">
+                            <p>Welcome to the Admin Dashboard! Use the menu above to manage users, places, and other features.</p>
                         </div>
                     </div>
                 </div>
