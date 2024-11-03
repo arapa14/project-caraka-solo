@@ -3,13 +3,15 @@ import { Head } from '@inertiajs/react';
 import React, { useState } from 'react';
 
 const UserList = ({ users }) => {
+    const [usersList, setUsers] = useState(users); // Initialize with props
     const [editingUser, setEditingUser] = useState(null);
     const [formData, setFormData] = useState({ name: '', email: '', password: '', role: 'Caraka' });
-    const [isCreating, setIsCreating] = useState(false); // State to toggle new user form
+    const [isCreating, setIsCreating] = useState(false);
+    const [error, setError] = useState('');
 
     const handleEditClick = (user) => {
         setEditingUser(user.id);
-        setFormData({ name: user.name, email: user.email, role: user.role, password: '' }); // Clear password on edit
+        setFormData({ name: user.name, email: user.email, role: user.role, password: '' });
     };
 
     const handleInputChange = (e) => {
@@ -26,22 +28,21 @@ const UserList = ({ users }) => {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                 },
-                body: JSON.stringify({ name: formData.name, email: formData.email, role: formData.role }), // Exclude password for updates
+                body: JSON.stringify({ name: formData.name, email: formData.email, role: formData.role }),
             });
 
             if (response.ok) {
-                // Refresh the user list after update
                 const updatedUser = await response.json();
-                setEditingUser(null); // Exit editing mode
-                setFormData({ name: '', email: '', password: '', role: 'Caraka' }); // Reset form data
-                // Optionally refresh user list from API
+                setUsers((prev) => prev.map(user => user.id === id ? updatedUser : user)); // Update user in state
+                setEditingUser(null);
+                setFormData({ name: '', email: '', password: '', role: 'Caraka' });
             } else {
                 const errorData = await response.json();
-                alert('Failed to update user: ' + errorData.message);
+                setError('Failed to update user: ' + errorData.message);
             }
         } catch (error) {
             console.error('Error updating user:', error);
-            alert('An error occurred while updating the user.');
+            setError('An error occurred while updating the user.');
         }
     };
 
@@ -56,47 +57,46 @@ const UserList = ({ users }) => {
                 });
 
                 if (response.ok) {
-                    // Remove the deleted user from the user list
+                    setUsers((prev) => prev.filter(user => user.id !== id)); // Remove user from state
                     alert('User deleted successfully!');
-                    // Optionally refresh user list from API
                 } else {
                     const errorText = await response.text();
-                    alert('Failed to delete user. Status: ' + response.status);
+                    setError('Failed to delete user. Status: ' + response.status);
                 }
             } catch (error) {
                 console.error('Error deleting user:', error);
-                alert('An error occurred while deleting the user.');
+                setError('An error occurred while deleting the user.');
             }
         }
     };
 
     const handleCreateUser = async (e) => {
-    e.preventDefault();
-    try {
-        const response = await fetch('/admin/users', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-            },
-            body: JSON.stringify(formData),
-        });
+        e.preventDefault();
+        try {
+            const response = await fetch('/admin/users', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                },
+                body: JSON.stringify(formData),
+            });
 
-        if (response.ok) {
-            const newUser = await response.json();
-            alert('User created successfully!');
-            // Optionally refresh the user list or add the new user to the state
-            // users.push(newUser); // Update users state or refresh the user list
-        } else {
-            const errorData = await response.json();
-            alert('Failed to create user: ' + errorData.message);
+            if (response.ok) {
+                const newUser = await response.json();
+                setUsers((prevUsers) => [...prevUsers, newUser]);
+                alert('User created successfully!');
+                setFormData({ name: '', email: '', password: '', role: 'Caraka' });
+                setIsCreating(false);
+            } else {
+                const errorData = await response.json();
+                setError('Failed to create user: ' + errorData.message);
+            }
+        } catch (error) {
+            console.error('Error creating user:', error);
+            setError('An error occurred while creating the user.');
         }
-    } catch (error) {
-        console.error('Error creating user:', error);
-        alert('An error occurred while creating the user.');
-    }
-};
-
+    };
 
     return (
         <AuthenticatedLayout
@@ -111,6 +111,7 @@ const UserList = ({ users }) => {
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
                     <div className="overflow-hidden bg-white shadow sm:rounded-lg">
                         <div className="p-6 bg-gray-100 border-b border-gray-200">
+                            {error && <div className="text-red-500">{error}</div>}
                             <button
                                 onClick={() => setIsCreating(!isCreating)}
                                 className="mb-4 bg-blue-500 text-white px-4 py-2 rounded"
@@ -177,7 +178,7 @@ const UserList = ({ users }) => {
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white">
-                                    {users.map(user => (
+                                    {usersList.map(user => (
                                         <tr key={user.id} className="hover:bg-gray-100">
                                             <td className="px-6 py-4 whitespace-nowrap">{user.id}</td>
                                             <td className="px-6 py-4 whitespace-nowrap">
@@ -224,30 +225,41 @@ const UserList = ({ users }) => {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 {editingUser === user.id ? (
-                                                    <button
-                                                        onClick={(e) => handleUpdate(e, user.id)}
-                                                        className="text-green-600 hover:text-green-800"
-                                                    >
-                                                        Save
-                                                    </button>
+                                                    <>
+                                                        <button
+                                                            onClick={(e) => handleUpdate(e, user.id)}
+                                                            className="bg-yellow-500 text-white px-4 py-1 rounded mr-2"
+                                                        >
+                                                            Save
+                                                        </button>
+                                                        <button
+                                                            onClick={() => setEditingUser(null)}
+                                                            className="bg-gray-300 text-black px-4 py-1 rounded"
+                                                        >
+                                                            Cancel
+                                                        </button>
+                                                    </>
                                                 ) : (
-                                                    <button
-                                                        onClick={() => handleEditClick(user)}
-                                                        className="text-blue-600 hover:text-blue-800"
-                                                    >
-                                                        Edit
-                                                    </button>
+                                                    <>
+                                                        <button
+                                                            onClick={() => handleEditClick(user)}
+                                                            className="bg-blue-500 text-white px-4 py-1 rounded mr-2"
+                                                        >
+                                                            Edit
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDelete(user.id)}
+                                                            className="bg-red-500 text-white px-4 py-1 rounded"
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                    </>
                                                 )}
-                                                <button
-                                                    onClick={() => handleDelete(user.id)}
-                                                    className="text-red-600 hover:text-red-800 ml-2"
-                                                >
-                                                    Delete
-                                                </button>
                                             </td>
                                         </tr>
                                     ))}
                                 </tbody>
+
                             </table>
                         </div>
                     </div>
