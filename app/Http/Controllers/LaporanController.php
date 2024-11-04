@@ -37,6 +37,63 @@ class LaporanController extends Controller
         //
     }
 
+    // Function to handle image processing and compression
+    private function processImage($imageFile, $imageNamePrefix, $directory, $watermarkText, $fontPath, $sizeLimit = 1024)
+    {
+        $imageName = time() . "_{$imageNamePrefix}." . $imageFile->getClientOriginalExtension();
+        $imagePath = $imageFile->storeAs($directory, $imageName, 'public');
+
+        $imagick = new Imagick(storage_path("app/public/{$directory}/{$imageName}"));
+
+        // Compress and resize
+        $imagick->setImageCompressionQuality(30);
+        $imagick->resizeImage(800, 800, Imagick::FILTER_LANCZOS, 1, true);
+
+        $isPortrait = $imagick->getImageHeight() > $imagick->getImageWidth();
+
+        $height = $imagick->getImageHeight();
+        $fontSize = max(10, intval($height * 0.05));
+
+        // Watermark setup
+        $draw = new ImagickDraw();
+        $draw->setFont($fontPath);
+        $draw->setFontSize($fontSize);
+        $draw->setFillColor(new ImagickPixel('white'));
+
+        $textMetrics = $imagick->queryFontMetrics($draw, $watermarkText);
+        $textWidth = $textMetrics['textWidth'];
+        $textHeight = $textMetrics['textHeight'];
+
+        $bgWidth = $textWidth + 20;
+        $bgHeight = $textHeight + 10;
+        $background = new Imagick();
+        $background->newImage($bgWidth, $bgHeight, new ImagickPixel('rgba(0, 0, 0, 0.43)'));
+        $background->setImageFormat('png');
+
+        $background->annotateImage($draw, 10, $fontSize + 5, 0, $watermarkText);
+
+        // Positioning watermark
+        if ($isPortrait) {
+            $xPosition = 0;
+            $yPosition = 0;
+        } else {
+            $xPosition = $imagick->getImageWidth() - $bgWidth - 10;
+            $yPosition = $imagick->getImageHeight() - $bgHeight - 10;
+        }
+
+        $imagick->compositeImage($background, Imagick::COMPOSITE_OVER, $xPosition, $yPosition);
+
+        while ($imagick->getImageLength() > $sizeLimit) {
+            $imagick->setImageCompressionQuality($imagick->getImageCompressionQuality() - 5);
+            if ($imagick->getImageCompressionQuality() <= 5) break;
+        }
+
+        $imagick->writeImage(storage_path("app/public/{$directory}/{$imageName}"));
+        $imagick->destroy();
+
+        return $imagePath;
+    }
+
     /**
      * Store a newly created resource in storage.
      */
@@ -45,75 +102,31 @@ class LaporanController extends Controller
         // dd($request->all());
         // Validasi request
         $request->validate([
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048', // Added max size validation
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
             'description' => 'required|string',
             'location' => 'required|string',
-            'waktu' => 'required|in:Pagi,Siang,Sore,Invalid', // Validate waktu input
+            'waktu' => 'required|in:Pagi,Siang,Sore,Invalid',
         ]);
 
-        // Mengunggah gambar
-        $imageName = time() . '.' . $request->file('image')->getClientOriginalExtension();
-        $request->file('image')->storeAs('uploads', $imageName, 'public');
+        // Generate watermark text
+        $watermarkText = now()->format('Y-m-d H:i:s') . "\nUser Input: " . Auth::user()->name;
+        $fontPath = public_path('dist/fonts/Poppins-Regular.otf');
 
-        // Simpan laporan dengan nama yang diambil dari pengguna yang sedang login
+        // Process image
+        $imagePath = $this->processImage($request->file('image'), 'watermarked', 'uploads', $watermarkText, $fontPath);
+
+        // Save report data
         $laporan = new Laporan();
-        $laporan->user_id = Auth::id(); // Menyimpan user_id dari user yang sedang login
-        $laporan->name = Auth::user()->name; // Ambil nama pengguna yang sedang login
+        $laporan->user_id = Auth::id();
+        $laporan->name = Auth::user()->name;
         $laporan->description = $request->description;
         $laporan->location = $request->location;
-        $laporan->waktu = $request->waktu; // Ambil waktu dari request
-        // dd($laporan);
-
-        // Watermarking logic
-        if ($request->hasFile('image')) {
-            // Initialize Imagick with the uploaded image
-            $imagick = new Imagick(storage_path("app/public/uploads/{$imageName}"));
-
-            // Mendapatkan dimensi gambar
-            $height = $imagick->getImageHeight();
-
-            // Menghitung ukuran font (misalnya, 5% dari tinggi gambar)
-            $fontSize = max(10, intval($height * 0.05)); // Minimal font size adalah 10
-
-            // Membuat watermark text
-            $watermarkText = now()->format('Y-m-d H:i:s') . "\nUser Input: " . Auth::user()->name;
-
-            // Membuat gambar teks untuk watermark
-            $draw = new ImagickDraw();
-            $draw->setFont(public_path('dist/fonts/Poppins-Regular.otf')); // Pastikan path font benar
-            $draw->setFontSize($fontSize);
-            $draw->setFillColor(new ImagickPixel('white')); // Warna putih
-
-            // Mengukur ukuran teks untuk membuat background
-            $textMetrics = $imagick->queryFontMetrics($draw, $watermarkText);
-            $textWidth = $textMetrics['textWidth'];
-            $textHeight = $textMetrics['textHeight'];
-
-            // Membuat background hitam transparan
-            $bgWidth = $textWidth + 20; // Tambah padding
-            $bgHeight = $textHeight + 10; // Tambah padding
-            $background = new Imagick();
-            $background->newImage($bgWidth, $bgHeight, new ImagickPixel('rgba(0, 0, 0, 0.43)')); // Hitam transparan
-            $background->setImageFormat('png');
-
-            // Menggabungkan background dan teks
-            $background->annotateImage($draw, 10, $fontSize + 5, 0, $watermarkText);
-
-            // Menyimpan gambar dengan watermark
-            $imagick->compositeImage($background, Imagick::COMPOSITE_OVER, 0, 0);
-            $watermarkedImagePath = storage_path("app/public/uploads/watermarked_{$imageName}");
-            $imagick->writeImage($watermarkedImagePath);
-            $imagick->destroy(); // Bebaskan memori
-
-            // Set image path pada model
-            $laporan->image = 'watermarked_' . $imageName; // Path untuk image yang ter-watermark
-        }
-
-        // Simpan laporan ke database
+        $laporan->waktu = $request->waktu;
+        $laporan->image = basename($imagePath);
         $laporan->save();
 
-        // Kembali ke halaman dashboard
-        // return redirect('/dashboard')->with('message', 'Laporan berhasil disimpan');
+        return redirect('/dashboard')->with('message', 'Laporan berhasil disimpan');
+
     }
 
     public function deleteAllUploads()

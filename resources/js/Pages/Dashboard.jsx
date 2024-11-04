@@ -128,7 +128,7 @@ export default function Dashboard(props) {
             header={
                 <div className="flex flex-col sm:flex-row items-center justify-between p-4 bg-white shadow-lg rounded-lg">
                     <h2 className="text-2xl sm:text-4xl font-bold text-blue-700 mb-2 sm:mb-0">
-                        Caraka Dashboard
+                        selamat datang {props.name}
                     </h2>
                     <span className="text-gray-500 text-right">{greeting} - {currentTime}</span>
                 </div>}
