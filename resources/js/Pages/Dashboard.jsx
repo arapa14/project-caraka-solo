@@ -123,12 +123,19 @@ export default function Dashboard(props) {
     const today = new Date();
     today.setHours(0, 0, 0, 0); // Set to start of the day for accurate comparison
 
+    // Check if there are reports for today
+    const reportsForToday = props.laporan?.data.some(laporan => {
+        const laporanDate = new Date(laporan.created_at);
+        laporanDate.setHours(0, 0, 0, 0);
+        return laporanDate.getTime() === today.getTime();
+    });
+
     return (
         <AuthenticatedLayout
             header={
                 <div className="flex flex-col sm:flex-row items-center justify-between p-4 bg-white shadow-lg rounded-lg">
                     <h2 className="text-2xl sm:text-4xl font-bold text-blue-700 mb-2 sm:mb-0">
-                        selamat datang {props.name}
+                        selamat datang {props.auth.user.name}
                     </h2>
                     <span className="text-gray-500 text-right">{greeting} - {currentTime}</span>
                 </div>}
@@ -138,12 +145,14 @@ export default function Dashboard(props) {
 
             <div className="py-12 bg-gray-100">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                    <button
-                        className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white py-3 px-6 rounded-full text-base sm:text-lg font-semibold shadow-md transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                        onClick={() => router.get('/riwayat')}
-                    >
-                        Lihat Riwayat
-                    </button>
+                    <div className="flex justify-center mb-8">
+                        <button
+                            className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white py-3 px-6 rounded-full text-base sm:text-lg font-semibold shadow-md transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                            onClick={() => router.get('/riwayat')}
+                        >
+                            Lihat Riwayat
+                        </button>
+                    </div>
 
                     {/* Notification for success */}
                     {isNotif && (
@@ -239,7 +248,7 @@ export default function Dashboard(props) {
                     </div>
 
                     {/* No Reports Notification */}
-                    {(!props.laporan || props.laporan.data.length === 0) && (
+                    {(!reportsForToday) && (
                         <div className="text-center py-12 bg-white shadow-lg rounded-lg mb-10">
                             <div className="text-3xl font-semibold text-gray-500 mb-4">
                                 <svg
@@ -263,51 +272,47 @@ export default function Dashboard(props) {
                     )}
 
                     {/* List report */}
-                     {/* Render laporan list */}
-                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {props.laporan && props.laporan.data.length > 0 &&
-                            props.laporan.data.map((laporan, i) => {
-                                const laporanDate = new Date(laporan.created_at);
-                                laporanDate.setHours(0, 0, 0, 0); // Set to start of the day
+                    {/* Render laporan list */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {props.laporan?.data.length > 0 && props.laporan.data.map((laporan, i) => {
+                            const laporanDate = new Date(laporan.created_at);
+                            laporanDate.setHours(0, 0, 0, 0);
 
-                                // Only show the report if it was created today
-                                if (laporanDate.getTime() === today.getTime()) {
-                                    return (
-                                        <div key={i} className="card w-full lg:w-96 bg-white shadow-md rounded-lg overflow-hidden mb-6">
-                                            <figure className="h-64 w-full">
-                                                <img
-                                                    src={`/storage/uploads/${laporan.image}`}
-                                                    alt={laporan.description}
-                                                    className="w-full h-full object-cover object-center"
-                                                />
-                                            </figure>
-                                            <div className="p-6">
-                                                <h2 className="text-2xl font-bold text-blue-600 mb-2">
-                                                    {laporan.name}
-                                                    <div className="inline-block ml-2 bg-blue-100 text-blue-700 text-xs font-semibold px-2 py-1 rounded">
-                                                        Laporan : {laporan.waktu}
-                                                    </div>
-                                                </h2>
-                                                <p className="text-gray-700 mb-4">{laporan.description}</p>
-                                                <div className="flex justify-between items-center">
-                                                    <div className="text-sm text-gray-500">{laporan.location}</div>
-                                                    <div className={`text-sm font-medium py-1 px-3 rounded ${laporan.status === 'Pending' ? 'bg-yellow-100 text-yellow-600' : laporan.status === 'unApproved' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
-                                                        {laporan.status}
-                                                    </div>
+                            if (laporanDate.getTime() === today.getTime()) {
+                                return (
+                                    <div key={i} className="card w-full lg:w-96 bg-white shadow-md rounded-lg overflow-hidden mb-6">
+                                        <figure className="h-64 w-full">
+                                            <img
+                                                src={`/storage/uploads/${laporan.image}`}
+                                                alt={laporan.description}
+                                                className="w-full h-full object-cover object-center"
+                                            />
+                                        </figure>
+                                        <div className="p-6">
+                                            <h2 className="text-2xl font-bold text-blue-600 mb-2">
+                                                {laporan.name}
+                                                <div className="inline-block ml-2 bg-blue-100 text-blue-700 text-xs font-semibold px-2 py-1 rounded">
+                                                    Laporan : {laporan.waktu}
+                                                </div>
+                                            </h2>
+                                            <p className="text-gray-700 mb-4">{laporan.description}</p>
+                                            <div className="flex justify-between items-center">
+                                                <div className="text-sm text-gray-500">{laporan.location}</div>
+                                                <div className={`text-sm font-medium py-1 px-3 rounded ${laporan.status === 'Pending' ? 'bg-yellow-100 text-yellow-600' : laporan.status === 'Unapproved' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
+                                                    {laporan.status}
                                                 </div>
                                             </div>
                                         </div>
-                                    );
-                                }
-                                return null; // Hide the report if it wasn't created today
-                            })
-                        }
+                                    </div>
+                                );
+                            }
+                        })}
                     </div>
 
 
 
-                    {/* Pagination */}
-                    <Paginator meta={props.laporan} />
+                    {/* Pagination
+                    <Paginator meta={props.laporan} /> */}
 
                 </div>
             </div>
