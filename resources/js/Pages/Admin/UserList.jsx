@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import React, { useState } from 'react';
+import { Inertia } from '@inertiajs/inertia';
 
 const UserList = ({ users }) => {
     const [usersList, setUsers] = useState(users); // Initialize with props
@@ -8,6 +9,18 @@ const UserList = ({ users }) => {
     const [formData, setFormData] = useState({ name: '', email: '', password: '', role: 'Caraka' });
     const [isCreating, setIsCreating] = useState(false);
     const [error, setError] = useState('');
+    const [successMessage, setSuccessMessage] = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
+    const { props } = usePage();
+
+    // Check for flash message
+    const updateMessage = props.flash?.message;
+
+
+    const clearMessages = () => {
+        setErrorMessage('');
+        setSuccessMessage('');
+    };
 
     const handleEditClick = (user) => {
         setEditingUser(user.id);
@@ -22,31 +35,65 @@ const UserList = ({ users }) => {
     const handleUpdate = async (e, id) => {
         e.preventDefault();
         try {
-            const response = await fetch(`/admin/users/${id}`, {
-                method: 'PUT',
+            const response = await Inertia.put(`/admin/users/${id}`, {
+                name: formData.name,
+                email: formData.email,
+                role: formData.role
+            });
+
+            // Handle success if response is successful
+            // Inertia automatically triggers a page update, so the success or error message is handled server-side
+            setSuccessMessage('User updated successfully!');
+            setEditingUser(null);
+            clearMessages();
+
+        } catch (error) {
+            // Handle failure if the request fails
+            setErrorMessage('Failed to update user.');
+            console.error(error); // Log any errors for debugging
+        }
+    };
+
+
+
+    const handleCreateUser = async (e) => {
+        e.preventDefault();
+        clearMessages();
+        try {
+            // Ensure password_confirmation is included in formData
+            const response = await fetch('/admin/users', {
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                 },
-                body: JSON.stringify({ name: formData.name, email: formData.email, role: formData.role }),
+                body: JSON.stringify({
+                    ...formData,
+                    password_confirmation: formData.password,  // Ensure password_confirmation is passed
+                }),
             });
-
+    
             if (response.ok) {
-                const updatedUser = await response.json();
-                setUsers((prev) => prev.map(user => user.id === id ? updatedUser : user)); // Update user in state
-                setEditingUser(null);
+                const newUser = await response.json();
+                setUsers((prevUsers) => [...prevUsers, newUser]);
+                setSuccessMessage('User created successfully!');
                 setFormData({ name: '', email: '', password: '', role: 'Caraka' });
+                setIsCreating(false);
             } else {
                 const errorData = await response.json();
-                setError('Failed to update user: ' + errorData.message);
+                setErrorMessage(`Failed to create user. ${errorData.message || 'Unknown error'}`);
             }
         } catch (error) {
-            console.error('Error updating user:', error);
-            setError('An error occurred while updating the user.');
+            console.error("Error while creating user:", error);
+            setErrorMessage('An error occurred while creating the user.');
         }
     };
+    
+    
+    
 
     const handleDelete = async (id) => {
+        clearMessages();
         if (confirm('Are you sure you want to delete this user?')) {
             try {
                 const response = await fetch(`/admin/users/${id}`, {
@@ -58,45 +105,16 @@ const UserList = ({ users }) => {
 
                 if (response.ok) {
                     setUsers((prev) => prev.filter(user => user.id !== id)); // Remove user from state
-                    alert('User deleted successfully!');
+                    setSuccessMessage('User deleted successfully!');
                 } else {
-                    const errorText = await response.text();
-                    setError('Failed to delete user. Status: ' + response.status);
+                    setErrorMessage('Failed to delete user.');
                 }
             } catch (error) {
-                console.error('Error deleting user:', error);
-                setError('An error occurred while deleting the user.');
+                setErrorMessage('An error occurred while deleting the user.');
             }
         }
     };
 
-    const handleCreateUser = async (e) => {
-        e.preventDefault();
-        try {
-            const response = await fetch('/admin/users', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                },
-                body: JSON.stringify(formData),
-            });
-
-            if (response.ok) {
-                const newUser = await response.json();
-                setUsers((prevUsers) => [...prevUsers, newUser]);
-                alert('User created successfully!');
-                setFormData({ name: '', email: '', password: '', role: 'Caraka' });
-                setIsCreating(false);
-            } else {
-                const errorData = await response.json();
-                setError('Failed to create user: ' + errorData.message);
-            }
-        } catch (error) {
-            console.error('Error creating user:', error);
-            setError('An error occurred while creating the user.');
-        }
-    };
 
     return (
         <AuthenticatedLayout
@@ -111,6 +129,10 @@ const UserList = ({ users }) => {
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
                     <div className="overflow-hidden bg-white shadow sm:rounded-lg">
                         <div className="p-6 bg-gray-100 border-b border-gray-200">
+                            {successMessage && <div className="text-green-500 mb-4">{successMessage}</div>}
+                            {updateMessage && <div className="text-green-500 mb-4">{updateMessage}</div>}
+                            {errorMessage && <div className="text-red-500 mb-4">{errorMessage}</div>}
+
                             {error && <div className="text-red-500">{error}</div>}
                             <button
                                 onClick={() => setIsCreating(!isCreating)}

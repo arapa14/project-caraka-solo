@@ -26,18 +26,22 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        $validatedData = $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
-            'role' => 'required|string|max:50',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:8|confirmed', // Make sure password_confirmation is sent
+            'role' => 'required|in:Admin,Reviewer,Caraka',
         ]);
     
-        $validatedData['password'] = bcrypt($validatedData['password']); // Hash the password
+        // Save the new user
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'role' => $validated['role'],
+        ]);
     
-        $user = User::create($validatedData); // Create user
-    
-        return response()->json($user, 201); // Return user data as JSON
+        return response()->json($user, 201);  // Returning the user with a 201 status code
     }
 
     /**
@@ -45,26 +49,33 @@ class UserController extends Controller
      */
     public function update(Request $request, string $id)
     {
+        // Validate the request
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $id, // Pastikan email unik, kecuali untuk pengguna itu sendiri
+            'email' => 'required|string|email|max:255|unique:users,email,' . $id,
             'role' => 'required|string',
-            // Validasi password jika diubah
             'password' => 'nullable|string|min:8|confirmed',
         ]);
 
+        // Find the user by ID
         $user = User::findOrFail($id);
 
+        // Update user data
         $user->name = $request->name;
         $user->email = $request->email;
-        if ($request->filled('password')) { // Hanya hash password jika diisi
+
+        if ($request->filled('password')) {
             $user->password = Hash::make($request->password);
         }
-        $user->role = $request->role;
 
+        $user->role = $request->role;
         $user->save();
 
-        return response()->json(['user' => $user, 'message' => 'User updated successfully']); // Respons yang lebih informatif
+        // Flash the success message to the session
+        session()->flash('message', 'User updated successfully!');
+
+        // Redirect to the user list page with Inertia
+        return Inertia::location(route('user.index'));
     }
 
     /**
