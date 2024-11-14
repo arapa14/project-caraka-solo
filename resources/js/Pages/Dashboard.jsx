@@ -12,8 +12,17 @@ export default function Dashboard(props) {
     const [alreadyModal, setAleadyModal] = useState(false);
     const [currentTime, setCurrentTime] = useState('');
     const [greeting, setGreeting] = useState('');
-
+    const [selectedLocation, setSelectedLocation] = useState('');
+    
     const ENABLE_TIME_RESTRICTION = false;
+
+    const handleLocationChange = (e) => {
+        setSelectedLocation(e.target.value); // Update selectedLocation state
+        setLocation(e.target.value); // Update location directly as well
+    };
+
+    console.log(props)
+    console.log("location", props.location)
 
     useEffect(() => {
         const serverTime = new Date(props.serverTime);
@@ -53,6 +62,9 @@ export default function Dashboard(props) {
 
 
     const handleSubmit = () => {
+        console.log('Selected Location:', selectedLocation);
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
         const now = new Date();
         const currentHour = now.getHours();
         const currentDay = now.getDate();
@@ -90,6 +102,7 @@ export default function Dashboard(props) {
         router.post('/laporan', data, {
             headers: {
                 'Content-Type': 'multipart/form-data',
+                'X-CSRF-Token': csrfToken,
             },
             onSuccess: () => {
                 setDescription('');
@@ -225,19 +238,29 @@ export default function Dashboard(props) {
                                 onChange={(e) => setImage(e.target.files[0])}
                             />
                         </div>
-                        <input
-                            type="text"
-                            placeholder="Lokasi"
-                            className="input input-bordered w-full p-4 mb-4 text-lg rounded-lg bg-white border-gray-300 focus:border-blue-500 focus:outline-none text-black"
-                            onChange={(e) => setLocation(e.target.value)}
-                            value={location}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                    handleSubmit();
-                                    e.preventDefault();
-                                }
-                            }}
-                        />
+
+                        {props.location && props.location.length > 0 ? (
+                            <select
+                                className="input input-bordered w-full p-4 mb-4 text-lg rounded-lg bg-white border-gray-300 focus:border-blue-500 focus:outline-none text-black"
+                                value={selectedLocation} // Bind it to the state
+                                onChange={handleLocationChange} // Update the state when the value changes
+                            >
+                                <option value="">Pilih Lokasi</option>
+                                {props.location.map((loc) => (
+                                    <option key={loc.id} value={loc.location}>
+                                        {loc.location}
+                                    </option>
+                                ))}
+                            </select>
+                        ) : (
+                            <input
+                                type="text"
+                                className="input input-bordered w-full p-4 mb-4 text-lg rounded-lg bg-white border-gray-300 focus:border-blue-500 focus:outline-none text-black"
+                                placeholder="Masukkan Lokasi"
+                                value={selectedLocation} // Bind it to the state
+                                onChange={handleLocationChange} // Update the state when the value changes
+                            />
+                        )}
 
                         <button
                             className="w-full bg-blue-600 text-white py-3 rounded-lg text-lg font-medium hover:bg-blue-700 transition"

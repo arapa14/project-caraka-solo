@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\LaporanCollection;
 use App\Models\Laporan;
 use App\Models\User;
+use App\Models\Location;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -104,7 +105,7 @@ class LaporanController extends Controller
         $request->validate([
             'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
             'description' => 'required|string',
-            'location' => 'required|string',
+            'location' => 'required',
             'waktu' => 'required|in:Pagi,Siang,Sore,Invalid',
         ]);
 
@@ -160,12 +161,14 @@ class LaporanController extends Controller
         $name = Auth::user()->name;
         $laporanUser = Laporan::where('name', $name)->orderByDesc('id')->paginate(6);
         $serverTime = Carbon::now()->toDateTimeString(); // Mengambil waktu server
+        $location = Location::all();
 
         // dd($laporanUser);
+        // dd($serverTime);
         return Inertia::render('Dashboard', [
-            'title' => 'Reviewer',
             'laporan' => $laporanUser,
-            'serverTime' => $serverTime
+            'serverTime' => $serverTime,
+            'location' => $location,
         ]);
     }
 

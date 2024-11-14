@@ -2,7 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import React from 'react';
 
-export default function Dashboard() {
+export default function Dashboard(props) {
     const handleDeleteAllUploads = async () => {
         if (window.confirm("Are you sure you want to delete all uploads? This action cannot be undone.")) {
             try {
@@ -39,7 +39,7 @@ export default function Dashboard() {
         <AuthenticatedLayout
             header={
                 <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                    Admin Dashboard
+                    Selamat datang Admin {props.auth.user.name}
                 </h2>
             }
         >
