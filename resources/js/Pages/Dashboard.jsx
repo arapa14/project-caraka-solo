@@ -14,8 +14,10 @@ export default function Dashboard(props) {
     const [currentTime, setCurrentTime] = useState('');
     const [greeting, setGreeting] = useState('');
     const [selectedLocation, setSelectedLocation] = useState('');
+    const [showValidationModal, setShowValidationModal] = useState(false);
+    const [validationMessage, setValidationMessage] = useState('');
 
-    const ENABLE_TIME_RESTRICTION = true;
+    const ENABLE_TIME_RESTRICTION = false;
 
     console.log(props)
 
@@ -68,6 +70,19 @@ export default function Dashboard(props) {
             return;
         }
 
+        // Validasi deskripsi dan foto
+        if (!description || !image) {
+            setValidationMessage('Deskripsi dan foto wajib diisi sebelum mengirim laporan.');
+            setShowValidationModal(true);
+            return;
+        }
+
+        if (selectedLocation === '') {
+            setValidationMessage('Anda harus memilih lokasi sebelum mengirim laporan.');
+            setShowValidationModal(true);
+            return;
+        }
+
         const now = new Date();
         const currentHour = now.getHours();
         const currentDay = now.getDate();
@@ -88,7 +103,7 @@ export default function Dashboard(props) {
         // Check if the user already submitted for this time window
         if (ENABLE_TIME_RESTRICTION) {
             if (previousUpload && new Date(previousUpload).getDate() === currentDay && localStorage.getItem('waktu') === waktu) {
-                setAleadyModal(true); // Show modal instead of alert
+                setAlreadyModal(true); // Show modal instead of alert
                 return;
             }
         }
@@ -178,7 +193,7 @@ export default function Dashboard(props) {
                     )}
 
                     {showTimeRestrictionModal && (
-                        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
+                        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
                             <div className="bg-white p-6 rounded-lg shadow-lg">
                                 <h3 className="text-lg font-bold text-red-600">Peringatan</h3>
                                 <p className="mt-2 text-gray-600">Laporan hanya bisa dikirim pada jam 06.00 - 12.00, 12.00 - 15.00, atau 15.00 - 17.00</p>
@@ -195,7 +210,7 @@ export default function Dashboard(props) {
                     )}
 
                     {alreadyModal && (
-                        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
+                        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
                             <div className="bg-white p-6 rounded-lg shadow-lg">
                                 <h3 className="text-lg font-bold text-red-600">Peringatan</h3>
                                 <p className="mt-2 text-gray-600">Anda sudah mengupload laporan dalam waktu ini.</p>
@@ -227,6 +242,24 @@ export default function Dashboard(props) {
                             </div>
                         </div>
                     )}
+
+                    {showValidationModal && (
+                        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
+                            <div className="bg-white p-6 rounded-lg shadow-lg">
+                                <h3 className="text-lg font-bold text-red-600">Peringatan</h3>
+                                <p className="mt-2 text-gray-600">{validationMessage}</p>
+                                <div className="mt-4">
+                                    <button
+                                        className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700"
+                                        onClick={() => setShowValidationModal(false)}
+                                    >
+                                        Tutup
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
 
 
 

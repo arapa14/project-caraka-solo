@@ -48,6 +48,7 @@ Route::middleware(['auth', 'isReviewer'])->group(function() {
     Route::get('/test1', function() {
         return "Haii Reviewer";
     });
+    Route::put('/laporan/{id}', [LaporanController::class, 'update']);
 });
 
 Route::middleware(['auth', 'isCaraka'])->group(function() {

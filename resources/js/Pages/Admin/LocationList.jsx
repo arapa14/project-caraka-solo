@@ -77,48 +77,50 @@ const LocationList = ({ locations }) => {
                                 </form>
                             )}
 
-                            <table className="min-w-full">
-                                <thead>
-                                    <tr className="bg-gray-200">
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white">
-                                    {locationsList.map(location => (
-                                        <tr key={location.id} className="hover:bg-gray-100">
-                                            <td className="px-6 py-4 whitespace-nowrap">{location.id}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                {editingLocation === location.id ? (
-                                                    <input
-                                                        type="text"
-                                                        name="location"
-                                                        value={formData.location}
-                                                        onChange={handleInputChange}
-                                                        className="border border-gray-300 rounded px-2 py-1"
-                                                    />
-                                                ) : (
-                                                    location.location
-                                                )}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                {editingLocation === location.id ? (
-                                                    <>
-                                                        <button onClick={(e) => handleUpdate(e, location.id)} className="bg-yellow-500 text-white px-4 py-1 rounded mr-2">Save</button>
-                                                        <button onClick={() => setEditingLocation(null)} className="bg-gray-300 text-black px-4 py-1 rounded">Cancel</button>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <button onClick={() => handleEditClick(location)} className="bg-blue-500 text-white px-4 py-1 rounded mr-2">Edit</button>
-                                                        <button onClick={() => handleDelete(location.id)} className="bg-red-500 text-white px-4 py-1 rounded">Delete</button>
-                                                    </>
-                                                )}
-                                            </td>
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full">
+                                    <thead>
+                                        <tr className="bg-gray-200">
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody className="bg-white">
+                                        {locationsList.map(location => (
+                                            <tr key={location.id} className="hover:bg-gray-100">
+                                                <td className="px-6 py-4 whitespace-nowrap">{location.id}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    {editingLocation === location.id ? (
+                                                        <input
+                                                            type="text"
+                                                            name="location"
+                                                            value={formData.location}
+                                                            onChange={handleInputChange}
+                                                            className="border border-gray-300 rounded px-2 py-1"
+                                                        />
+                                                    ) : (
+                                                        location.location
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    {editingLocation === location.id ? (
+                                                        <>
+                                                            <button onClick={(e) => handleUpdate(e, location.id)} className="bg-yellow-500 text-white px-4 py-1 rounded mr-2">Save</button>
+                                                            <button onClick={() => setEditingLocation(null)} className="bg-gray-300 text-black px-4 py-1 rounded">Cancel</button>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <button onClick={() => handleEditClick(location)} className="bg-blue-500 text-white px-4 py-1 rounded mr-2">Edit</button>
+                                                            <button onClick={() => handleDelete(location.id)} className="bg-red-500 text-white px-4 py-1 rounded">Delete</button>
+                                                        </>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>

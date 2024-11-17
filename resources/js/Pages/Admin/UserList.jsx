@@ -16,7 +16,6 @@ const UserList = ({ users }) => {
     // Check for flash message
     const updateMessage = props.flash?.message;
 
-
     const clearMessages = () => {
         setErrorMessage('');
         setSuccessMessage('');
@@ -41,26 +40,20 @@ const UserList = ({ users }) => {
                 role: formData.role
             });
 
-            // Handle success if response is successful
-            // Inertia automatically triggers a page update, so the success or error message is handled server-side
             setSuccessMessage('User updated successfully!');
             setEditingUser(null);
             clearMessages();
 
         } catch (error) {
-            // Handle failure if the request fails
             setErrorMessage('Failed to update user.');
             console.error(error); // Log any errors for debugging
         }
     };
 
-
-
     const handleCreateUser = async (e) => {
         e.preventDefault();
         clearMessages();
         try {
-            // Ensure password_confirmation is included in formData
             const response = await fetch('/admin/users', {
                 method: 'POST',
                 headers: {
@@ -72,7 +65,7 @@ const UserList = ({ users }) => {
                     password_confirmation: formData.password,  // Ensure password_confirmation is passed
                 }),
             });
-    
+
             if (response.ok) {
                 const newUser = await response.json();
                 setUsers((prevUsers) => [...prevUsers, newUser]);
@@ -88,9 +81,6 @@ const UserList = ({ users }) => {
             setErrorMessage('An error occurred while creating the user.');
         }
     };
-    
-    
-    
 
     const handleDelete = async (id) => {
         clearMessages();
@@ -104,7 +94,7 @@ const UserList = ({ users }) => {
                 });
 
                 if (response.ok) {
-                    setUsers((prev) => prev.filter(user => user.id !== id)); // Remove user from state
+                    setUsers((prev) => prev.filter(user => user.id !== id));
                     setSuccessMessage('User deleted successfully!');
                 } else {
                     setErrorMessage('Failed to delete user.');
@@ -114,7 +104,6 @@ const UserList = ({ users }) => {
             }
         }
     };
-
 
     return (
         <AuthenticatedLayout
@@ -189,100 +178,92 @@ const UserList = ({ users }) => {
                                 </form>
                             )}
 
-                            <table className="min-w-full">
-                                <thead>
-                                    <tr className="bg-gray-200">
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white">
-                                    {usersList.map(user => (
-                                        <tr key={user.id} className="hover:bg-gray-100">
-                                            <td className="px-6 py-4 whitespace-nowrap">{user.id}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                {editingUser === user.id ? (
-                                                    <input
-                                                        type="text"
-                                                        name="name"
-                                                        value={formData.name}
-                                                        onChange={handleInputChange}
-                                                        className="border border-gray-300 rounded px-2 py-1"
-                                                    />
-                                                ) : (
-                                                    user.name
-                                                )}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                {editingUser === user.id ? (
-                                                    <input
-                                                        type="email"
-                                                        name="email"
-                                                        value={formData.email}
-                                                        onChange={handleInputChange}
-                                                        className="border border-gray-300 rounded px-2 py-1"
-                                                    />
-                                                ) : (
-                                                    user.email
-                                                )}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                {editingUser === user.id ? (
-                                                    <select
-                                                        name="role"
-                                                        value={formData.role}
-                                                        onChange={handleInputChange}
-                                                        className="border border-gray-300 rounded px-2 py-1"
-                                                    >
-                                                        <option value="Admin">Admin</option>
-                                                        <option value="Reviewer">Reviewer</option>
-                                                        <option value="Caraka">Caraka</option>
-                                                    </select>
-                                                ) : (
-                                                    user.role
-                                                )}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                {editingUser === user.id ? (
-                                                    <>
+                            {/* Wrapping the table with a scrollable container */}
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full">
+                                    <thead>
+                                        <tr className="bg-gray-200">
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white">
+                                        {usersList.map(user => (
+                                            <tr key={user.id} className="hover:bg-gray-100">
+                                                <td className="px-6 py-4 whitespace-nowrap">{user.id}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    {editingUser === user.id ? (
+                                                        <input
+                                                            type="text"
+                                                            name="name"
+                                                            value={formData.name}
+                                                            onChange={handleInputChange}
+                                                            className="border border-gray-300 rounded px-2 py-1"
+                                                        />
+                                                    ) : (
+                                                        user.name
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    {editingUser === user.id ? (
+                                                        <input
+                                                            type="email"
+                                                            name="email"
+                                                            value={formData.email}
+                                                            onChange={handleInputChange}
+                                                            className="border border-gray-300 rounded px-2 py-1"
+                                                        />
+                                                    ) : (
+                                                        user.email
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    {editingUser === user.id ? (
+                                                        <select
+                                                            name="role"
+                                                            value={formData.role}
+                                                            onChange={handleInputChange}
+                                                            className="border border-gray-300 rounded px-2 py-1"
+                                                        >
+                                                            <option value="Admin">Admin</option>
+                                                            <option value="Reviewer">Reviewer</option>
+                                                            <option value="Caraka">Caraka</option>
+                                                        </select>
+                                                    ) : (
+                                                        user.role
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    {editingUser === user.id ? (
                                                         <button
                                                             onClick={(e) => handleUpdate(e, user.id)}
-                                                            className="bg-yellow-500 text-white px-4 py-1 rounded mr-2"
+                                                            className="bg-green-500 text-white px-4 py-2 rounded"
                                                         >
                                                             Save
                                                         </button>
-                                                        <button
-                                                            onClick={() => setEditingUser(null)}
-                                                            className="bg-gray-300 text-black px-4 py-1 rounded"
-                                                        >
-                                                            Cancel
-                                                        </button>
-                                                    </>
-                                                ) : (
-                                                    <>
+                                                    ) : (
                                                         <button
                                                             onClick={() => handleEditClick(user)}
-                                                            className="bg-blue-500 text-white px-4 py-1 rounded mr-2"
+                                                            className="bg-yellow-500 text-white px-4 py-2 rounded"
                                                         >
                                                             Edit
                                                         </button>
-                                                        <button
-                                                            onClick={() => handleDelete(user.id)}
-                                                            className="bg-red-500 text-white px-4 py-1 rounded"
-                                                        >
-                                                            Delete
-                                                        </button>
-                                                    </>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-
-                            </table>
+                                                    )}
+                                                    <button
+                                                        onClick={() => handleDelete(user.id)}
+                                                        className="bg-red-500 text-white px-4 py-2 rounded ml-2"
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
