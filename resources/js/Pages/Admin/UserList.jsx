@@ -26,6 +26,7 @@ const UserList = ({ users }) => {
         setFormData({ name: user.name, email: user.email, role: user.role, password: '' });
     };
 
+
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData((prevData) => ({ ...prevData, [name]: value }));

@@ -22,9 +22,9 @@ export default function Dashboard(props) {
     const [showPresenceModal, setShowPresenceModal] = useState(false);
     const [presenceMessage, setPresenceMessage] = useState("");
 
-    const ENABLE_TIME_RESTRICTION = false;
 
-    console.log(props);
+    //nanti ini diupdate jadi dinamis di admin
+    const ENABLE_TIME_RESTRICTION = true;
 
     const handleLocationChange = (e) => {
         setSelectedLocation(e.target.value);
@@ -537,7 +537,6 @@ export default function Dashboard(props) {
 
                     
 
-                    Pagination
                     <Paginator meta={props.laporan} />
                 </div>
             </div>
