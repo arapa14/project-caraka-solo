@@ -1,7 +1,9 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Head, Link } from "@inertiajs/react";
-import React from "react";
+import { Head, Link, router } from "@inertiajs/react";
+import React, { useRef } from "react";
 import Paginator from "@/Components/Homepage/Paginator";
+import Preview from "@/Components/Preview";
+import PageNavigation from "@/Components/PageNavigation";
 
 export default function Riwayat({ laporan }) {
     const laporanByDate = laporan.data.reduce((acc, laporanItem) => {
@@ -17,6 +19,7 @@ export default function Riwayat({ laporan }) {
         acc[date].push(laporanItem);
         return acc;
     }, {});
+    console.log(laporan);
 
     return (
         <AuthenticatedLayout>
@@ -38,102 +41,113 @@ export default function Riwayat({ laporan }) {
                                 Riwayat Laporan
                             </h3>
                         </div>
-                        <div className="border-t border-gray-200">
+
+                        <div className="border-t border-gray-200 p-4">
                             {laporan.data.length === 0 ? (
                                 <p className="p-6 text-center text-gray-500">
                                     Belum ada laporan yang tersimpan.
                                 </p>
                             ) : (
-                                Object.entries(laporanByDate).map(
-                                    ([date, items]) => (
-                                        <div key={date} className="mb-6">
-                                            <h4 className="text-lg font-semibold text-gray-700 mb-4 ml-5">
-                                                {date}
-                                            </h4>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 ml-5">
-                                                {items.map((laporanItem) => (
-                                                    <div
-                                                        key={laporanItem.id}
-                                                        className="bg-white border border-gray-200 rounded-lg shadow-md overflow-hidden"
-                                                    >
-                                                        <figure className="h-64 w-full">
-                                                            <img
-                                                                src={`/storage/uploads/${laporanItem.image}`}
-                                                                alt={
-                                                                    laporanItem.description
-                                                                }
-                                                                className="w-full h-full object-contain"
-                                                            />
-                                                        </figure>
-                                                        <div className="p-6">
-                                                            <h2 className="text-2xl font-bold text-blue-600 mb-2">
-                                                                {
-                                                                    laporanItem.name
-                                                                }
-                                                                <div className="inline-block ml-2 bg-blue-100 text-blue-700 text-xs font-semibold px-2 py-1 rounded">
-                                                                    Laporan :{" "}
-                                                                    {
-                                                                        laporanItem.waktu
-                                                                    }
-                                                                </div>
-                                                            </h2>
-                                                            <p className="text-gray-700 mb-4">
-                                                                {
-                                                                    laporanItem.description
-                                                                }
-                                                            </p>
-                                                            <div className="flex justify-between items-center">
-                                                                <div className="text-sm text-gray-500">
-                                                                    {
-                                                                        laporanItem.location
-                                                                    }
-                                                                </div>
-                                                                <div className="flex gap-2">
-                                                                    <div
-                                                                        className={`text-sm font-medium py-1 px-3 rounded ${
-                                                                            laporanItem.presence ===
-                                                                            "Izin"
-                                                                                ? "bg-yellow-100 text-yellow-600"
-                                                                                : laporanItem.presence ===
-                                                                                  "Sakit"
-                                                                                ? "bg-red-100 text-red-600"
-                                                                                : "bg-green-100 text-green-600"
-                                                                        }`}
-                                                                    >
-                                                                        {
-                                                                            laporanItem.presence
-                                                                        }
-                                                                    </div>
-                                                                    <div
-                                                                        className={`text-sm font-medium py-1 px-3 rounded ${
-                                                                            laporanItem.status ===
-                                                                            "Pending"
-                                                                                ? "bg-yellow-100 text-yellow-600"
-                                                                                : laporanItem.status ===
-                                                                                  "unApproved"
-                                                                                ? "bg-red-100 text-red-600"
-                                                                                : "bg-green-100 text-green-600"
-                                                                        }`}
-                                                                    >
-                                                                        {
-                                                                            laporanItem.status
-                                                                        }
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )
-                                )
+                                <>
+                                    <Table laporan={laporan} />
+                                    <PageNavigation laporan={laporan} />
+                                </>
                             )}
                         </div>
                     </div>
                 </div>
             </div>
-            <Paginator links={laporan.links} />
         </AuthenticatedLayout>
     );
 }
+const Table = ({ laporan }) => {
+    const modalRef = useRef(null);
+    const viewPhotoRef = useRef(null);
+    const handleDownload = (url) => {
+        const link = document.createElement("a");
+        link.href = `/storage/uploads/${url}`;
+        link.download = url;
+        link.click();
+    };
+
+    const handleView = (url) => {
+        viewPhotoRef.current.src = `/storage/uploads/${url}`;
+        modalRef.current.showModal();
+    };
+    return (
+        <div className="overflow-x-scroll">
+            <Preview modalRef={modalRef} viewPhotoRef={viewPhotoRef} />
+            <table className="bg-white w-full mb-4 min-w-[530px] max-w-[1080px] m-auto text-sm tex-left rounded text-black">
+                <thead className="text-white text-xs uppercase bg-gradient-to-r from-blue-500 to-blue-700 border-b-2 rounded-t border-gray-200 overflow-hidden">
+                    <tr className="text-nowrap">
+                        <th className="p-3 w-8">ID</th>
+                        <th className="p-3">Waktu</th>
+                        <th className="p-3">Deskripsi</th>
+                        <th className="p-3">Lokasi</th>
+                        <th className="p-3">Kehadiran</th>
+                        <th className="p-3">Status</th>
+                        <th className="w-20"></th>
+                    </tr>
+                </thead>
+                <tbody className="overflow-hidden">
+                    {laporan.data.map((laporanItem, index) => (
+                        <tr
+                            key={index}
+                            className={`border-b text-center border-gray-200 hover:brightness-95 ${
+                                index % 2 ? "bg-slate-100" : "bg-white"
+                            }`}
+                        >
+                            <td className="p-3">{laporanItem.id}</td>
+                            <td className="p-3">{laporanItem.waktu}</td>
+                            <td className="p-3">{laporanItem.description}</td>
+                            <td className="p-3">{laporanItem.location}</td>
+                            <td className="p-3">
+                                <div
+                                    className={`m-auto text-sm w-16 font-medium py-1 px-3 rounded ${
+                                        laporanItem.presence === "Izin"
+                                            ? "bg-yellow-100 text-yellow-600"
+                                            : laporanItem.presence === "Sakit"
+                                            ? "bg-red-100 text-red-600"
+                                            : "bg-green-100 text-green-600"
+                                    }`}
+                                >
+                                    {laporanItem.presence}
+                                </div>
+                            </td>
+                            <td className="p-3">
+                                <div
+                                    className={`w-fit m-auto text-sm font-medium py-1 px-3 rounded ${
+                                        laporanItem.status === "Pending"
+                                            ? "bg-yellow-100 text-yellow-600"
+                                            : laporanItem.status ===
+                                              "unApproved"
+                                            ? "bg-red-100 text-red-600"
+                                            : "bg-green-100 text-green-600"
+                                    }`}
+                                >
+                                    {laporanItem.status}
+                                </div>
+                            </td>
+                            <td className="w-8">
+                                <i
+                                    className="fi fi-rr-eye hover:brightness-90 p-2 mr-2 rounded cursor-pointer bg-blue-500"
+                                    onClick={() =>
+                                        handleView(laporanItem.image)
+                                    }
+                                ></i>
+
+                                <i
+                                    className="fi fi-rr-download hover:brightness-90 p-2 rounded cursor-pointer bg-green-500"
+                                    onClick={() =>
+                                        handleDownload(laporanItem.image)
+                                    }
+                                ></i>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
+};
+

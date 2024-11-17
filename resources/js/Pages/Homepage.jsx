@@ -2,6 +2,7 @@ import React from "react";
 import { Link, Head } from "@inertiajs/react";
 import LaporanList from "@/Components/Homepage/LaporanList";
 import Paginator from "@/Components/Homepage/Paginator";
+import PageNavigation from "@/Components/PageNavigation";
 
 export default function Homepage(props) {
     return (
@@ -31,7 +32,7 @@ export default function Homepage(props) {
                     <LaporanList laporan={props.laporan} />
                 </div>
                 <div className="flex justify-center mt-12">
-                    <Paginator meta={props.laporan} /> {/* Send pagination metadata */}
+                    <PageNavigation laporan={props.laporan}/> {/* Send pagination metadata */}
                 </div>
             </div>
         </div>

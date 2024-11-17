@@ -75,6 +75,8 @@ export default function Dashboard(props) {
         return () => clearInterval(intervalId);
     }, [props.serverTime]);
 
+    
+
     const handleSubmit = () => {
         const csrfToken = document
             .querySelector('meta[name="csrf-token"]')
@@ -533,8 +535,10 @@ export default function Dashboard(props) {
                             })}
                     </div>
 
-                    {/* Pagination
-                    <Paginator meta={props.laporan} /> */}
+                    
+
+                    Pagination
+                    <Paginator meta={props.laporan} />
                 </div>
             </div>
         </AuthenticatedLayout>
