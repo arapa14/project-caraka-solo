@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LaporanController;
+use App\Http\Controllers\LocationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SwitchAccountController;
 use App\Http\Controllers\userController;
@@ -32,6 +33,11 @@ Route::middleware(['auth', 'isAdmin'])->group(function () {
     Route::post('/admin/users', [UserController::class, 'store'])->name('user.store');
     Route::put('/admin/users/{id}', [UserController::class, 'update'])->name('user.update');
     Route::delete('/admin/users/{id}', [UserController::class, 'destroy'])->name('user.destroy');
+
+    Route::get('/locations', [LocationController::class, 'index'])->name('locations.index');
+    Route::post('/locations', [LocationController::class, 'store'])->name('locations.store');
+    Route::put('/locations/{location}', [LocationController::class, 'update'])->name('locations.update');
+    Route::delete('/locations/{location}', [LocationController::class, 'destroy'])->name('locations.destroy');
 });
 
 Route::middleware(['auth', 'isReviewer'])->group(function() {

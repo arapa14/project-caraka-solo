@@ -61,10 +61,10 @@ export default function Dashboard(props) {
 
                                 {/* CRUD Tempat */}
                                 <Link
-                                    href="/admin/places"
+                                    href="/locations"
                                     className="p-4 text-center bg-green-600 text-white rounded-lg hover:bg-green-700"
                                 >
-                                    Manage Places
+                                    Manage Location
                                 </Link>
 
                                 {/* Other Admin Feature */}

@@ -8,21 +8,21 @@ export default function Dashboard(props) {
     const [location, setLocation] = useState('');
     const [image, setImage] = useState('');
     const [isNotif, setIsNotif] = useState(false);
-    const [showModal, setShowModal] = useState(false); // Modal visibility state
-    const [alreadyModal, setAleadyModal] = useState(false);
+    const [showTimeRestrictionModal, setShowTimeRestrictionModal] = useState(false);
+    const [showLocationModal, setShowLocationModal] = useState(false);
+    const [alreadyModal, setAlreadyModal] = useState(false);
     const [currentTime, setCurrentTime] = useState('');
     const [greeting, setGreeting] = useState('');
     const [selectedLocation, setSelectedLocation] = useState('');
-    
-    const ENABLE_TIME_RESTRICTION = false;
 
-    const handleLocationChange = (e) => {
-        setSelectedLocation(e.target.value); // Update selectedLocation state
-        setLocation(e.target.value); // Update location directly as well
-    };
+    const ENABLE_TIME_RESTRICTION = true;
 
     console.log(props)
-    console.log("location", props.location)
+
+    const handleLocationChange = (e) => {
+        setSelectedLocation(e.target.value);
+        setLocation(e.target.value);
+    };
 
     useEffect(() => {
         const serverTime = new Date(props.serverTime);
@@ -60,10 +60,13 @@ export default function Dashboard(props) {
         return () => clearInterval(intervalId);
     }, [props.serverTime]);
 
-
     const handleSubmit = () => {
-        console.log('Selected Location:', selectedLocation);
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+        if (selectedLocation === '') {
+            setShowLocationModal(true);
+            return;
+        }
 
         const now = new Date();
         const currentHour = now.getHours();
@@ -174,8 +177,7 @@ export default function Dashboard(props) {
                         </div>
                     )}
 
-                    {/* Time Restriction Modal */}
-                    {showModal && (
+                    {showTimeRestrictionModal && (
                         <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
                             <div className="bg-white p-6 rounded-lg shadow-lg">
                                 <h3 className="text-lg font-bold text-red-600">Peringatan</h3>
@@ -183,7 +185,7 @@ export default function Dashboard(props) {
                                 <div className="mt-4">
                                     <button
                                         className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700"
-                                        onClick={() => setShowModal(false)}
+                                        onClick={() => setShowTimeRestrictionModal(false)}
                                     >
                                         Tutup
                                     </button>
@@ -192,7 +194,6 @@ export default function Dashboard(props) {
                         </div>
                     )}
 
-                    {/* Already Uploaded Modal */}
                     {alreadyModal && (
                         <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
                             <div className="bg-white p-6 rounded-lg shadow-lg">
@@ -201,7 +202,7 @@ export default function Dashboard(props) {
                                 <div className="mt-4">
                                     <button
                                         className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700"
-                                        onClick={() => setAleadyModal(false)}
+                                        onClick={() => setAlreadyModal(false)}
                                     >
                                         Tutup
                                     </button>
@@ -209,6 +210,25 @@ export default function Dashboard(props) {
                             </div>
                         </div>
                     )}
+
+                    {showLocationModal && (
+                        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
+                            <div className="bg-white p-6 rounded-lg shadow-lg">
+                                <h3 className="text-lg font-bold text-red-600">Peringatan</h3>
+                                <p className="mt-2 text-gray-600">Anda harus memilih lokasi sebelum mengirim laporan.</p>
+                                <div className="mt-4">
+                                    <button
+                                        className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700"
+                                        onClick={() => setShowLocationModal(false)}
+                                    >
+                                        Tutup
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+
 
                     {/* Form Section */}
                     <div className="bg-white shadow-lg rounded-lg p-8 mb-10">
@@ -239,28 +259,34 @@ export default function Dashboard(props) {
                             />
                         </div>
 
-                        {props.location && props.location.length > 0 ? (
+                        <div className="mb-4 relative">
                             <select
-                                className="input input-bordered w-full p-4 mb-4 text-lg rounded-lg bg-white border-gray-300 focus:border-blue-500 focus:outline-none text-black"
-                                value={selectedLocation} // Bind it to the state
-                                onChange={handleLocationChange} // Update the state when the value changes
+                                className="appearance-none input-bordered w-full p-4 text-lg rounded-lg bg-white border-gray-300 focus:border-blue-500 focus:outline-none text-black h-14"
+                                style={{
+                                    minHeight: '56px',              // Set a minimum height consistent with other inputs
+                                    width: '100%',                  // Full-width to match other inputs
+                                    whiteSpace: 'normal',           // Allows wrapping of long text
+                                    overflowWrap: 'break-word',     // Prevents words from being cut off
+                                    overflow: 'visible',            // Makes sure all text is visible
+                                    display: 'block',               // Ensures it fills its container
+                                }}
+                                value={selectedLocation}
+                                onChange={handleLocationChange}
                             >
-                                <option value="">Pilih Lokasi</option>
-                                {props.location.map((loc) => (
-                                    <option key={loc.id} value={loc.location}>
-                                        {loc.location}
-                                    </option>
-                                ))}
+                                <option value="">Select Location</option>
+                                {Array.isArray(props.location) && props.location.length > 0 ? (
+                                    props.location.map((loc) => (
+                                        <option key={loc.id} value={loc.location}>
+                                            {loc.location}
+                                        </option>
+                                    ))
+                                ) : (
+                                    <option value="">No locations available</option>  // Fallback in case location is empty or not available
+                                )}
+
                             </select>
-                        ) : (
-                            <input
-                                type="text"
-                                className="input input-bordered w-full p-4 mb-4 text-lg rounded-lg bg-white border-gray-300 focus:border-blue-500 focus:outline-none text-black"
-                                placeholder="Masukkan Lokasi"
-                                value={selectedLocation} // Bind it to the state
-                                onChange={handleLocationChange} // Update the state when the value changes
-                            />
-                        )}
+                        </div>
+
 
                         <button
                             className="w-full bg-blue-600 text-white py-3 rounded-lg text-lg font-medium hover:bg-blue-700 transition"
@@ -297,7 +323,7 @@ export default function Dashboard(props) {
                     {/* List report */}
                     {/* Render laporan list */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {props.laporan?.data.length > 0 && props.laporan.data.map((laporan, i) => {
+                        {props.laporan?.data?.length > 0 && props.laporan.data.map((laporan, i) => {
                             const laporanDate = new Date(laporan.created_at);
                             laporanDate.setHours(0, 0, 0, 0);
 
@@ -330,6 +356,7 @@ export default function Dashboard(props) {
                                 );
                             }
                         })}
+
                     </div>
 
 

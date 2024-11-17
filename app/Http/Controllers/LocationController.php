@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Location;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class LocationController extends Controller
 {
@@ -12,12 +13,20 @@ class LocationController extends Controller
      */
     public function index()
     {
-        $locations = Location::all();
+        $locations = Location::all(); // Ambil semua data location dari database
+        return Inertia::render('Admin/LocationList', [
+            'locations' => $locations,
+        ]);
     }
 
     /**
      * Show the form for creating a new resource.
      */
+    /*************  ✨ Codeium Command ⭐  *************/
+    /**
+     * Show the form for creating a new location.
+     */
+    /******  08546540-13a4-4658-91fe-3109ad79946d  *******/
     public function create()
     {
         //
@@ -28,7 +37,13 @@ class LocationController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'location' => 'required|string|max:255',
+        ]);
+
+        Location::create($request->only('location'));
+
+        return redirect()->back()->with('message', 'Location created successfully');
     }
 
     /**
@@ -52,7 +67,13 @@ class LocationController extends Controller
      */
     public function update(Request $request, Location $location)
     {
-        //
+        $request->validate([
+            'location' => 'required|string|max:255',
+        ]);
+
+        $location->update($request->only('location'));
+
+        return redirect()->back()->with('message', 'Location updated successfully');
     }
 
     /**
@@ -60,6 +81,7 @@ class LocationController extends Controller
      */
     public function destroy(Location $location)
     {
-        //
+        $location->delete();
+        return redirect()->back()->with('message', 'Location deleted successfully');
     }
 }

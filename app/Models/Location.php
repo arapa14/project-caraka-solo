@@ -10,4 +10,9 @@ class Location extends Model
     use HasFactory;
 
     protected $table = 'locations';
+
+    // Menambahkan 'location' ke dalam fillable
+    protected $fillable = ['location'];
 }
+
+
