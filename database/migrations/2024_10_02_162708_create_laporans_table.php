@@ -20,6 +20,7 @@ return new class extends Migration
             $table->enum('waktu', ['Pagi', 'Siang', 'Sore', 'Invalid'])->default('Invalid');
             $table->string('image');
             $table->enum('status', ['Pending', 'unApproved', 'Approved'])->default('Pending');
+            $table->enum('presence', ['Hadir', 'Sakit', 'Izin']);
             $table->timestamps();
 
             // Menambahkan foreign key constraint untuk user_id

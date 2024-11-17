@@ -107,6 +107,7 @@ class LaporanController extends Controller
             'description' => 'required|string',
             'location' => 'required',
             'waktu' => 'required|in:Pagi,Siang,Sore,Invalid',
+            'presence' => 'required|in:Hadir,Sakit,Izin',
         ]);
 
         // Generate watermark text
@@ -124,10 +125,10 @@ class LaporanController extends Controller
         $laporan->location = $request->location;
         $laporan->waktu = $request->waktu;
         $laporan->image = basename($imagePath);
+        $laporan->presence = $request->presence;
         $laporan->save();
 
         return redirect('/dashboard')->with('message', 'Laporan berhasil disimpan');
-
     }
 
     public function deleteAllUploads()
