@@ -62,7 +62,7 @@ export default function Riwayat({ laporan }) {
                                                                 alt={
                                                                     laporanItem.description
                                                                 }
-                                                                className="w-full h-full object-cover object-center"
+                                                                className="w-full h-full object-contain"
                                                             />
                                                         </figure>
                                                         <div className="p-6">

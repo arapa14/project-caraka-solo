@@ -479,7 +479,7 @@ export default function Dashboard(props) {
                                                 <img
                                                     src={`/storage/uploads/${laporan.image}`}
                                                     alt={laporan.description}
-                                                    className="w-full h-full object-cover object-center"
+                                                    className="w-full h-full object-contain"
                                                 />
                                             </figure>
                                             <div className="p-6">
