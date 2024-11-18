@@ -24,6 +24,7 @@ export default function Dashboard(props) {
 
 
     //nanti ini diupdate jadi dinamis di admin
+    //masih hardcode
     const ENABLE_TIME_RESTRICTION = true;
 
     const handleLocationChange = (e) => {

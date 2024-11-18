@@ -22,7 +22,7 @@ class LaporanController extends Controller
      */
     public function index()
     {
-        $laporan = Laporan::orderByDesc('id')->paginate(6); // Langsung menggunakan paginate
+        $laporan = Laporan::orderByDesc('id')->paginate(5); // Langsung menggunakan paginate
         // dd($laporan);
         return Inertia::render('Homepage', [
             'title' => 'Reviewer',
@@ -187,21 +187,36 @@ class LaporanController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $laporan = Laporan::find($id);
-        if (!$laporan) {
-            return response()->json(['message' => 'Laporan not found'], 404);
+        try {
+            // Cari laporan berdasarkan ID
+            $laporan = Laporan::find($id);
+            if (!$laporan) {
+                return response()->json(['message' => 'Laporan not found'], 404);
+            }
+
+            // Validasi status
+            $validatedData = $request->validate([
+                'status' => 'required|string|in:Pending,unApproved,Approved',
+            ]);
+
+            // Update status
+            $laporan->status = $validatedData['status'];
+            $laporan->save();
+
+            // Refresh untuk memastikan data diperbarui
+            $laporan->refresh();
+
+            return response()->json([
+                'message' => 'Status updated successfully',
+                'laporan' => $laporan,
+            ]);
+        } catch (\Exception $e) {
+            // Tangani error dan kembalikan respons
+            return response()->json([
+                'message' => 'An error occurred while updating the status',
+                'error' => $e->getMessage(),
+            ], 500);
         }
-
-        // Validasi status
-        $validatedData = $request->validate([
-            'status' => 'required|string|in:Pending,unApproved,Approved',
-        ]);
-
-        // Update status
-        $laporan->status = $validatedData['status'];
-        $laporan->save();
-
-        return response()->json(['message' => 'Status updated successfully']);
     }
 
     public function riwayat()
