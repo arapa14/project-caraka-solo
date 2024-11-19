@@ -34,7 +34,7 @@ export default function Login({ status, canResetPassword }) {
             <div className="flex-1 flex flex-col justify-center items-center bg-white p-8">
                 <div className="w-full max-w-md space-y-8">
                     <div className="text-center">
-                        <h2 className="mt-6 text-5xl font-bold text-blue-700">Caraka</h2>
+                        <h2 className="mt-6 text-5xl font-bold text-blue-700">Daily Caraka</h2>
                         <p className="text-2xl text-gray-500 mt-4">Login to your account</p>
                     </div>
                     {status && (
