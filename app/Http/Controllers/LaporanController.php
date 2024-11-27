@@ -11,9 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Carbon\Carbon;
-use Imagick;
-use ImagickDraw;
-use ImagickPixel;
+use Intervention\Image\Facades\Image;
 
 class LaporanController extends Controller
 {
@@ -42,58 +40,68 @@ class LaporanController extends Controller
     private function processImage($imageFile, $imageNamePrefix, $directory, $watermarkText, $fontPath, $sizeLimit = 1024)
     {
         $imageName = time() . "_{$imageNamePrefix}." . $imageFile->getClientOriginalExtension();
-        $imagePath = $imageFile->storeAs($directory, $imageName, 'public');
+        $imagePath = storage_path("app/public/{$directory}/{$imageName}");
 
-        $imagick = new Imagick(storage_path("app/public/{$directory}/{$imageName}"));
+        // Buka gambar
+        $image = Image::make($imageFile->getRealPath());
 
-        // Compress and resize
-        $imagick->setImageCompressionQuality(30);
-        $imagick->resizeImage(800, 800, Imagick::FILTER_LANCZOS, 1, true);
+        // Resize gambar
+        $image->resize(800, 800, function ($constraint) {
+            $constraint->aspectRatio();
+            $constraint->upsize();
+        });
 
-        $isPortrait = $imagick->getImageHeight() > $imagick->getImageWidth();
+        // Ukuran teks dan padding
+        $textPadding = 20;
+        $fontSize = 18;
 
-        $height = $imagick->getImageHeight();
-        $fontSize = max(10, intval($height * 0.05));
+        // Hitung dimensi teks
+        $lines = explode("\n", $watermarkText);
+        $maxLineWidth = max(array_map('strlen', $lines));
+        $textBoxWidth = $maxLineWidth * $fontSize * 0.6; // Estimasi lebar teks
+        $textBoxHeight = count($lines) * ($fontSize + 5); // Tinggi berdasarkan jumlah baris
 
-        // Watermark setup
-        $draw = new ImagickDraw();
-        $draw->setFont($fontPath);
-        $draw->setFontSize($fontSize);
-        $draw->setFillColor(new ImagickPixel('white'));
+        // Hitung posisi latar belakang
+        $backgroundX = $image->width() - $textBoxWidth - $textPadding * 2;
+        $backgroundY = $image->height() - $textBoxHeight - $textPadding * 2;
 
-        $textMetrics = $imagick->queryFontMetrics($draw, $watermarkText);
-        $textWidth = $textMetrics['textWidth'];
-        $textHeight = $textMetrics['textHeight'];
+        // Tambahkan latar belakang
+        $image->rectangle(
+            $backgroundX - $textPadding,
+            $backgroundY - $textPadding,
+            $image->width() - $textPadding,
+            $image->height() - $textPadding,
+            function ($draw) {
+                $draw->background('rgba(0, 0, 0, 0.5)'); // Warna semi-transparan
+                $draw->border(1, 'rgba(255, 255, 255, 0.5)'); // Garis tepi (opsional)
+            }
+        );
 
-        $bgWidth = $textWidth + 20;
-        $bgHeight = $textHeight + 10;
-        $background = new Imagick();
-        $background->newImage($bgWidth, $bgHeight, new ImagickPixel('rgba(0, 0, 0, 0.43)'));
-        $background->setImageFormat('png');
+        // Tambahkan teks watermark di atas latar belakang
+        $image->text($watermarkText, $image->width() - $textPadding - 10, $image->height() - $textPadding - $textBoxHeight / 2, function ($font) use ($fontPath, $fontSize) {
+            $font->file($fontPath);
+            $font->size($fontSize);
+            $font->color('rgba(255, 255, 255, 0.9)');
+            $font->align('right');
+            $font->valign('bottom');
+        });
 
-        $background->annotateImage($draw, 10, $fontSize + 5, 0, $watermarkText);
+        // Simpan gambar
+        $image->save($imagePath, 80); // Kualitas 80
 
-        // Positioning watermark
-        if ($isPortrait) {
-            $xPosition = 0;
-            $yPosition = 0;
-        } else {
-            $xPosition = $imagick->getImageWidth() - $bgWidth - 10;
-            $yPosition = $imagick->getImageHeight() - $bgHeight - 10;
+        // Pastikan ukuran file di bawah batas
+        while (filesize($imagePath) > $sizeLimit * 1024) {
+            $currentQuality = $image->quality();
+            if ($currentQuality <= 10) {
+                break;
+            }
+            $image->save($imagePath, $currentQuality - 10);
         }
 
-        $imagick->compositeImage($background, Imagick::COMPOSITE_OVER, $xPosition, $yPosition);
-
-        while ($imagick->getImageLength() > $sizeLimit) {
-            $imagick->setImageCompressionQuality($imagick->getImageCompressionQuality() - 5);
-            if ($imagick->getImageCompressionQuality() <= 5) break;
-        }
-
-        $imagick->writeImage(storage_path("app/public/{$directory}/{$imageName}"));
-        $imagick->destroy();
-
-        return $imagePath;
+        return "storage/{$directory}/{$imageName}";
     }
+
+
 
     /**
      * Store a newly created resource in storage.
